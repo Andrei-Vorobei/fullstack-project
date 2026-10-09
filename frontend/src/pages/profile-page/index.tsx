@@ -6,6 +6,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { Link } from 'react-router';
 
 import { useRemoveUserMutation, useUpdateUserMutation } from '@/app-store/api/auth-api';
+import { useImportProductsMutation } from '@/app-store/api/products-api';
 import { getProfile, type UserRole } from '@/app-store/reducers/user-slice';
 import Button from '@/components/UI/button/button';
 import TextInput from '@/components/UI/text-input/text-input';
@@ -31,6 +32,7 @@ const ProfilePage = (): JSX.Element => {
   const [isEditing, setIsEditing] = useState(false);
   const [updateUser, updateResult] = useUpdateUserMutation();
   const [removeUser, removeResult] = useRemoveUserMutation();
+  const [importProducts, importResult] = useImportProductsMutation();
   const [messageApi, messageContext] = message.useMessage();
   const {
     register,
@@ -40,6 +42,7 @@ const ProfilePage = (): JSX.Element => {
     formState: { errors },
   } = useForm<ProfileFormValues>();
   const newPassword = useWatch({ control, name: 'password' });
+  const isAdmin = profile?.roles.includes('admin') ?? false;
 
   useEffect(() => {
     if (profile) {
@@ -85,6 +88,15 @@ const ProfilePage = (): JSX.Element => {
         }
       },
     });
+  };
+
+  const handleImportProducts = async (): Promise<void> => {
+    try {
+      const result = await importProducts().unwrap();
+      await messageApi.success(result.message);
+    } catch {
+      await messageApi.error('Не удалось импортировать товары. Попробуйте ещё раз.');
+    }
   };
 
   if (!profile) {
@@ -264,6 +276,16 @@ const ProfilePage = (): JSX.Element => {
                   >
                     {removeResult.isLoading ? 'Удаляем...' : 'Удалить аккаунт'}
                   </Button>
+                  {isAdmin ? (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={importResult.isLoading}
+                      onClick={() => void handleImportProducts()}
+                    >
+                      {importResult.isLoading ? 'Импортируем...' : 'Импортировать товары'}
+                    </Button>
+                  ) : null}
                 </div>
                 {removeResult.isError ? (
                   <p className={styles.error} role="alert">

@@ -1,8 +1,5 @@
-import type { BaseQueryFn } from '@reduxjs/toolkit/query/react';
-import type { AxiosError, AxiosRequestConfig } from 'axios';
-
 import { createApi } from '@reduxjs/toolkit/query/react';
-import axios from 'axios';
+import { axiosBaseQuery } from './auth-api';
 
 export type ProductReview = {
   rating: number;
@@ -66,51 +63,10 @@ export type ProductFilters = {
   inStock?: boolean;
 };
 
-type AxiosBaseQueryArgs = {
-  baseUrl: string;
-  defaultHeaders?: Record<string, string>;
-};
-
-export const axiosBaseQuery =
-  ({
-    baseUrl,
-    defaultHeaders,
-  }: AxiosBaseQueryArgs): BaseQueryFn<
-    {
-      url: string;
-      method?: AxiosRequestConfig['method'];
-      data?: AxiosRequestConfig['data'];
-      params?: AxiosRequestConfig['params'];
-      headers?: AxiosRequestConfig['headers'];
-    },
-    unknown,
-    unknown
-  > =>
-  async ({ url, method = 'GET', data, params, headers }) => {
-    try {
-      const result = await axios({
-        url: `${baseUrl}${url}`,
-        method,
-        data,
-        params,
-        headers: { ...defaultHeaders, ...headers },
-      });
-      return { data: result.data };
-    } catch (axiosError) {
-      const err = axiosError as AxiosError;
-      return {
-        error: {
-          status: err.response?.status,
-          data: err.response?.data ?? err.message,
-        },
-      };
-    }
-  };
-
 export const productsApi = createApi({
   reducerPath: 'productsApi',
   baseQuery: axiosBaseQuery({
-    baseUrl: 'http://localhost:3000',
+    baseUrl: import.meta.env.VITE_AUTH_API_URL ?? 'http://localhost:3000',
   }),
   tagTypes: ['Product'],
   endpoints: (builder) => ({
@@ -141,7 +97,20 @@ export const productsApi = createApi({
       query: (id) => ({ url: `/products/${id}` }),
       providesTags: (_result, _error, id) => [{ type: 'Product', id }],
     }),
+
+    importProducts: builder.mutation<{ message: string }, void>({
+      query: () => ({
+        url: '/products/import',
+        method: 'POST',
+      }),
+      invalidatesTags: ['Product'],
+    }),
   }),
 });
 
-export const { useGetProductsQuery, useGetFilteredProductsQuery, useGetProductByIdQuery } = productsApi;
+export const {
+  useGetProductsQuery,
+  useGetFilteredProductsQuery,
+  useGetProductByIdQuery,
+  useImportProductsMutation,
+} = productsApi;
