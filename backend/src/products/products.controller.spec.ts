@@ -45,11 +45,32 @@ describe('ProductsController', () => {
   });
 
   it('imports products for an admin', async () => {
+    vi.mocked(productsService.importFromJson).mockResolvedValue({
+      fileFound: true,
+      imported: 1,
+    });
+
     await controller.importProducts({
       user: { roles: [UserRole.ADMIN] },
     });
 
     expect(productsService.importFromJson).toHaveBeenCalledOnce();
+  });
+
+  it('reports when the products JSON file is missing', async () => {
+    vi.mocked(productsService.importFromJson).mockResolvedValue({
+      fileFound: false,
+      imported: 0,
+    });
+
+    await expect(
+      controller.importProducts({
+        user: { roles: [UserRole.ADMIN] },
+      }),
+    ).resolves.toEqual({
+      imported: 0,
+      message: 'Файл products.json не найден, импорт не выполнен',
+    });
   });
 
   it('rejects product imports for non-admin users', async () => {

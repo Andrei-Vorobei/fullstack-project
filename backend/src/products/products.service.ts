@@ -101,7 +101,7 @@ export class ProductsService {
     return query.orderBy('product.externalId', 'ASC').getMany();
   }
 
-  async importFromJson(): Promise<void> {
+  async importFromJson(): Promise<{ fileFound: boolean; imported: number }> {
     let file: string;
 
     try {
@@ -112,7 +112,7 @@ export class ProductsService {
         'code' in error &&
         error.code === 'ENOENT'
       ) {
-        return;
+        return { fileFound: false, imported: 0 };
       }
 
       throw error;
@@ -120,12 +120,15 @@ export class ProductsService {
 
     const data: { products: ProductFromJson[] } = JSON.parse(file);
 
-    await this.productsRepository.upsert(
-      data.products.map(({ id, ...product }) => ({
-        ...product,
-        externalId: id,
-      })),
-      ['externalId'],
-    );
+    const products = data.products.map(({ id, ...product }) => ({
+      ...product,
+      externalId: id,
+    }));
+
+    if (products.length > 0) {
+      await this.productsRepository.upsert(products, ['externalId']);
+    }
+
+    return { fileFound: true, imported: products.length };
   }
 }

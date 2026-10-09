@@ -5,8 +5,6 @@ export class InitialSchema1791570000000 implements MigrationInterface {
 
   async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
-      CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
       DO $$
       BEGIN
         CREATE TYPE "users_roles_enum" AS ENUM ('user', 'admin');

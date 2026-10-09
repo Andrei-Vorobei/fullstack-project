@@ -64,8 +64,18 @@ export class ProductsController {
       throw new ForbiddenException('Требуется роль администратора');
     }
 
-    await this.productsService.importFromJson();
+    const result = await this.productsService.importFromJson();
 
-    return { message: 'Товары успешно импортированы' };
+    if (!result.fileFound) {
+      return {
+        imported: 0,
+        message: 'Файл products.json не найден, импорт не выполнен',
+      };
+    }
+
+    return {
+      imported: result.imported,
+      message: `Импортировано товаров: ${result.imported}`,
+    };
   }
 }

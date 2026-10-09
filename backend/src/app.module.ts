@@ -59,6 +59,7 @@ import { InitialSchema1791570000000 } from './migrations/1791570000000-initial-s
           entities: [User, Product, Cart, CartItem],
           migrations: [InitialSchema1791570000000],
           migrationsRun: true,
+          installExtensions: false,
           toLoadEntities: true,
           synchronize: false,
         };

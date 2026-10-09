@@ -90,8 +90,34 @@ describe('ProductsService', () => {
       Object.assign(new Error('File not found'), { code: 'ENOENT' }),
     );
 
-    await expect(service.importFromJson()).resolves.toBeUndefined();
+    await expect(service.importFromJson()).resolves.toEqual({
+      fileFound: false,
+      imported: 0,
+    });
     expect(productsRepository.upsert).not.toHaveBeenCalled();
+  });
+
+  it('imports products from the JSON file', async () => {
+    vi.mocked(readFile).mockResolvedValue(
+      JSON.stringify({
+        products: [
+          {
+            id: 42,
+            title: 'Test product',
+            sku: 'TEST-42',
+          },
+        ],
+      }) as never,
+    );
+
+    await expect(service.importFromJson()).resolves.toEqual({
+      fileFound: true,
+      imported: 1,
+    });
+    expect(productsRepository.upsert).toHaveBeenCalledWith(
+      [{ title: 'Test product', sku: 'TEST-42', externalId: 42 }],
+      ['externalId'],
+    );
   });
 
   it('creates a product in the repository', async () => {
