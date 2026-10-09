@@ -42,9 +42,10 @@ JWT_REFRESH_SECRET=<другой-случайный-секрет>
 YANDEX_CLIENT_ID=<client-id>
 YANDEX_CLIENT_SECRET=<client-secret>
 YANDEX_REDIRECT_URI=http://localhost:3000/oauth/yandex/callback
+FRONTEND_ORIGINS=http://localhost:5173
 ```
 
-Для генерации секретов можно использовать `openssl rand -base64 48`. Backend читает настройки из `backend/.env`, когда запускается из каталога `backend`.
+`FRONTEND_ORIGINS` содержит origin frontend, с которого браузеру разрешено обращаться к API. Несколько origin можно указать через запятую. Для локального Vite это обычно `http://localhost:5173`. Для генерации секретов можно использовать `openssl rand -base64 48`. Backend читает настройки из `backend/.env`, когда запускается из каталога `backend`.
 
 В отдельном терминале:
 
@@ -117,10 +118,11 @@ JWT_REFRESH_SECRET=<другой-случайный-длинный-секрет>
 YANDEX_CLIENT_ID=<production-client-id>
 YANDEX_CLIENT_SECRET=<production-client-secret>
 YANDEX_REDIRECT_URI=https://api.example.com/oauth/yandex/callback
+FRONTEND_ORIGINS=https://example.com
 VITE_AUTH_API_URL=https://api.example.com
 ```
 
-Сгенерируйте отдельные секреты, например командой `openssl rand -base64 48`. Не используйте dev-значения и не коммитьте `.env`. В настройках приложения Яндекс OAuth укажите точно такой же callback URL. `VITE_AUTH_API_URL` встраивается во frontend во время сборки, поэтому после его изменения frontend надо пересобрать.
+`FRONTEND_ORIGINS` задаёт разрешённые адреса frontend для CORS; перечислите несколько через запятую, если нужно. Сгенерируйте отдельные секреты, например командой `openssl rand -base64 48`. Не используйте dev-значения и не коммитьте `.env`. В настройках приложения Яндекс OAuth укажите точно такой же callback URL. `VITE_AUTH_API_URL` встраивается во frontend во время сборки, поэтому после его изменения frontend надо пересобрать.
 
 ### 3. Настроить reverse proxy: Caddy или Nginx
 
@@ -232,7 +234,7 @@ docker compose ps
 
 ## Важные замечания перед production
 
-- В `backend/src/main.ts` сейчас CORS разрешает любой origin (`origin: true`). Перед публичным запуском замените это на список доверенных frontend-origin, например `https://example.com`. Не полагайтесь на CORS как на защиту API.
+- Укажите только доверенные frontend-origin в `FRONTEND_ORIGINS` перед запуском. Не полагайтесь на CORS как на защиту API.
 - В TypeORM включён `synchronize: true`. Для production с важными данными следует перейти на миграции и отключить автоматическое изменение схемы.
 - Не запускайте Adminer-профиль (`--profile tools`) на публичном сервере без отдельной защиты. По умолчанию Adminer публикует порт на всех интерфейсах, если его привязка не ограничена.
 - Не храните production-секреты в Git или Docker image. Для более строгой эксплуатации используйте secret manager и ограничьте доступ к файлу `.env` на сервере.

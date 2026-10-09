@@ -57,7 +57,7 @@ import { CartModule } from './cart/cart.module.js';
           database: configService.getOrThrow<string>('DB_DATABASE'),
           entities: [User, Product, Cart, CartItem],
           toLoadEntities: true,
-          synchronize: true,
+          synchronize: false,
         };
       },
     }),
