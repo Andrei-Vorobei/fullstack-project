@@ -1,0 +1,40 @@
+.page {
+  padding: 24px;
+}
+
+.loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 240px;
+}
+
+.userCard {
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  background: #fff;
+}
+
+.userRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.userContent {
+  flex: 1;
+}
+
+.username {
+  font-weight: 600;
+}
+
+.metaBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: rgba(0, 0, 0, 0.65);
+  margin-top: 8px;
+}

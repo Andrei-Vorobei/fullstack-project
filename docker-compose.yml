@@ -1,0 +1,81 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.pub
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${POSTGRES_USER:?Set POSTGRES_USER in the project .env file}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the project .env file}
+      DB_DATABASE: ${POSTGRES_DB:?Set POSTGRES_DB in the project .env file}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in the project .env file}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?Set JWT_REFRESH_SECRET in the project .env file}
+      YANDEX_CLIENT_ID: ${YANDEX_CLIENT_ID:?Set YANDEX_CLIENT_ID in the project .env file}
+      YANDEX_CLIENT_SECRET: ${YANDEX_CLIENT_SECRET:?Set YANDEX_CLIENT_SECRET in the project .env file}
+      YANDEX_REDIRECT_URI: ${YANDEX_REDIRECT_URI:?Set YANDEX_REDIRECT_URI in the project .env file}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - fullstack-database
+      - fullstack-app
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.pub
+      args:
+        VITE_AUTH_API_URL: "${VITE_AUTH_API_URL:-http://localhost:${BACKEND_PORT:-3000}}"
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    networks:
+      - fullstack-app
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in the project .env file}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the project .env file}
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in the project .env file}
+    volumes:
+      - fullstack-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fullstack-database
+    restart: unless-stopped
+
+  db-adminer:
+    image: adminer:latest
+    profiles: [tools]
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    ports:
+      - "${ADMINER_PORT:-8081}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - fullstack-database
+    restart: unless-stopped
+
+volumes:
+  fullstack-postgres-data:
+
+networks:
+  fullstack-database:
+    driver: bridge
+    internal: true
+  fullstack-app:
+    driver: bridge
+
+

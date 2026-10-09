@@ -1,0 +1,30 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "path": "backend",
+      "script": "start:dev",
+      "problemMatcher": [],
+      "label": "Backend: start:dev",
+      "detail": "nest start --watch"
+    },
+    {
+      "type": "npm",
+      "path": "frontend",
+      "script": "dev",
+      "problemMatcher": [],
+      "label": "Frontend: dev",
+      "detail": "vite"
+    },
+    {
+      "label": "start:dev (backend + frontend)",
+      "dependsOn": [
+        "Backend: start:dev",
+        "Frontend: dev"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    }
+  ]
+}

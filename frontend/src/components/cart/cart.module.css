@@ -1,0 +1,150 @@
+.cart {
+  min-width: 0;
+}
+
+.products {
+  display: grid;
+  max-height: min(52vh, 480px);
+  gap: 12px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 2px 4px 2px 0;
+  list-style: none;
+}
+
+.product {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto 32px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.thumbnail {
+  display: block;
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  background: #f9fafb;
+  object-fit: contain;
+}
+
+.productInfo {
+  min-width: 0;
+}
+
+.productTitle {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0 0 5px;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.quantity,
+.discount {
+  margin: 0;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.quantityControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.quantity {
+  min-width: 20px;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.unitPrice {
+  margin-left: 4px;
+  color: #6b7280;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.discount {
+  color: #15803d;
+}
+
+.productTotal {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  color: #111827;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.quantityControls {
+  flex-wrap: wrap;
+}
+
+.originalPrice {
+  color: #9ca3af;
+  font-size: 12px;
+  text-decoration: line-through;
+}
+
+.summary {
+  display: grid;
+  gap: 12px;
+}
+
+.summaryLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.grandTotal {
+  color: #111827;
+  font-size: 18px;
+}
+
+.clearButton {
+  justify-self: start;
+  margin-top: 4px;
+}
+
+@media (max-width: 480px) {
+  .product {
+    grid-template-columns: 52px minmax(0, 1fr) 32px;
+    gap: 9px;
+    padding: 10px;
+  }
+
+  .thumbnail {
+    width: 52px;
+    height: 52px;
+  }
+
+  .productTotal {
+    grid-column: 2;
+    grid-row: 2;
+    flex-direction: row;
+    justify-self: start;
+  }
+
+  .product > :last-child {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
