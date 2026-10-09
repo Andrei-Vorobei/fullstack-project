@@ -102,7 +102,22 @@ export class ProductsService {
   }
 
   async importFromJson(): Promise<void> {
-    const file = await readFile(resolve(process.cwd(), 'products.json'), 'utf8');
+    let file: string;
+
+    try {
+      file = await readFile(resolve(process.cwd(), 'products.json'), 'utf8');
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        'code' in error &&
+        error.code === 'ENOENT'
+      ) {
+        return;
+      }
+
+      throw error;
+    }
+
     const data: { products: ProductFromJson[] } = JSON.parse(file);
 
     await this.productsRepository.upsert(

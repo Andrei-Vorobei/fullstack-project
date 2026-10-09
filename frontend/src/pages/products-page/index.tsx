@@ -55,7 +55,7 @@ const ProductsPage = (): JSX.Element => {
   );
 
   useEffect(() => {
-    console.log('products data: ', hasActiveFilters ? filteredProducts : data);
+    // console.log('products data: ', hasActiveFilters ? filteredProducts : data);
   }, [data, filteredProducts, hasActiveFilters]);
 
   const errorMessage = useMemo(() => {

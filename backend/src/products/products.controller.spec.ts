@@ -1,15 +1,21 @@
+import { ForbiddenException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductsController } from './products.controller.js';
 import { ProductsService } from './products.service.js';
+import { UserRole } from '#src/users/entities/user-role.enum.js';
 
 describe('ProductsController', () => {
   let controller: ProductsController;
-  let productsService: Pick<ProductsService, 'getProductsAll' | 'createProduct'>;
+  let productsService: Pick<
+    ProductsService,
+    'getProductsAll' | 'createProduct' | 'importFromJson'
+  >;
 
   beforeEach(async () => {
     productsService = {
       getProductsAll: vi.fn(),
       createProduct: vi.fn(),
+      importFromJson: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -36,5 +42,23 @@ describe('ProductsController', () => {
     await controller.createProduct(product);
 
     expect(productsService.createProduct).toHaveBeenCalledWith(product);
+  });
+
+  it('imports products for an admin', async () => {
+    await controller.importProducts({
+      user: { roles: [UserRole.ADMIN] },
+    });
+
+    expect(productsService.importFromJson).toHaveBeenCalledOnce();
+  });
+
+  it('rejects product imports for non-admin users', async () => {
+    await expect(
+      controller.importProducts({
+        user: { roles: [UserRole.USER] },
+      }),
+    ).rejects.toThrow(ForbiddenException);
+
+    expect(productsService.importFromJson).not.toHaveBeenCalled();
   });
 });

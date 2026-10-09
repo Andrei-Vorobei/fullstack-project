@@ -122,7 +122,11 @@ VITE_AUTH_API_URL=https://api.example.com
 
 Сгенерируйте отдельные секреты, например командой `openssl rand -base64 48`. Не используйте dev-значения и не коммитьте `.env`. В настройках приложения Яндекс OAuth укажите точно такой же callback URL. `VITE_AUTH_API_URL` встраивается во frontend во время сборки, поэтому после его изменения frontend надо пересобрать.
 
-### 3. Настроить Caddy
+### 3. Настроить reverse proxy: Caddy или Nginx
+
+Выберите один вариант. Если на сервере уже настроен Nginx, Caddy устанавливать не нужно.
+
+#### Вариант A: Caddy
 
 Создайте Caddyfile с содержимым:
 
@@ -138,6 +142,63 @@ api.example.com {
 ```
 
 Проверьте конфигурацию и перезагрузите Caddy штатной для установленной ОС командой. При доступных DNS-записях и портах 80/443 Caddy автоматически выпустит TLS-сертификаты.
+
+#### Вариант B: Nginx
+
+Настройте DNS-записи `example.com` и `api.example.com` на IP-адрес сервера и получите TLS-сертификат для обоих доменов, например:
+
+```bash
+sudo certbot --nginx -d example.com -d api.example.com
+```
+
+Создайте конфигурацию сайта Nginx (например, `/etc/nginx/sites-available/fullstack-project`) и замените путь к сертификату, если Certbot сохранил его в другом каталоге:
+
+```nginx
+server {
+    listen 80;
+    server_name example.com api.example.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name example.com;
+
+    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name api.example.com;
+
+    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+Активируйте конфигурацию способом, принятым в вашей ОС (например, создайте ссылку из `sites-available` в `sites-enabled`), затем проверьте её и перезагрузите Nginx:
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
 
 ### 4. Собрать и запустить проект
 

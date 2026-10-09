@@ -1,18 +1,27 @@
+import { readFile } from 'node:fs/promises';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './entities/products.entity.js';
 import { ProductsService } from './products.service.js';
 
+vi.mock('node:fs/promises', () => ({
+  readFile: vi.fn(),
+}));
+
 describe('ProductsService', () => {
   let service: ProductsService;
-  let productsRepository: Pick<Repository<Product>, 'findAndCount' | 'create' | 'save'>;
+  let productsRepository: Pick<
+    Repository<Product>,
+    'findAndCount' | 'create' | 'save' | 'upsert'
+  >;
 
   beforeEach(async () => {
     productsRepository = {
       findAndCount: vi.fn(),
       create: vi.fn((product) => product),
       save: vi.fn(async (product) => product),
+      upsert: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -74,6 +83,15 @@ describe('ProductsService', () => {
     await expect(service.getProductsAll(0, 0)).rejects.toThrow(
       'limit must be a positive integer',
     );
+  });
+
+  it('does nothing when the products JSON file does not exist', async () => {
+    vi.mocked(readFile).mockRejectedValue(
+      Object.assign(new Error('File not found'), { code: 'ENOENT' }),
+    );
+
+    await expect(service.importFromJson()).resolves.toBeUndefined();
+    expect(productsRepository.upsert).not.toHaveBeenCalled();
   });
 
   it('creates a product in the repository', async () => {

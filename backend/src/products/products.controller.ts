@@ -2,13 +2,24 @@ import {
   Body,
   Controller,
   DefaultValuePipe,
+  ForbiddenException,
   Get,
   ParseIntPipe,
   Post,
   Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtGuard } from '#src/auth/jwt.guard.js';
 import { Product } from './entities/products.entity.js';
 import { ProductsService } from './products.service.js';
+import { UserRole } from '#src/users/entities/user-role.enum.js';
+
+type AuthenticatedRequest = {
+  user: {
+    roles: UserRole[];
+  };
+};
 
 @Controller('products')
 export class ProductsController {
@@ -44,5 +55,17 @@ export class ProductsController {
   @Post()
   createProduct(@Body() product: Partial<Product>) {
     return this.productsService.createProduct(product);
+  }
+
+  @UseGuards(JwtGuard)
+  @Post('import')
+  async importProducts(@Req() req: AuthenticatedRequest) {
+    if (!req.user.roles.includes(UserRole.ADMIN)) {
+      throw new ForbiddenException('Требуется роль администратора');
+    }
+
+    await this.productsService.importFromJson();
+
+    return { message: 'Товары успешно импортированы' };
   }
 }
