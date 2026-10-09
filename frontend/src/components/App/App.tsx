@@ -99,10 +99,7 @@ const App: React.FC = (): JSX.Element => {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider
-        breakpoint="lg"
-        collapsedWidth="0"
-      >
+      <Sider breakpoint="lg" collapsedWidth="0">
         <Menu
           theme="dark"
           mode="inline"

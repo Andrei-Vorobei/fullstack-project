@@ -15,6 +15,7 @@ import { Product } from './products/entities/products.entity.js';
 import { Cart } from './cart/entities/cart.entity.js';
 import { CartItem } from './cart/entities/cart-item.entity.js';
 import { CartModule } from './cart/cart.module.js';
+import { InitialSchema1791570000000 } from './migrations/1791570000000-initial-schema.js';
 
 @Module({
   imports: [
@@ -56,6 +57,8 @@ import { CartModule } from './cart/cart.module.js';
           password: configService.getOrThrow<string>('DB_PASSWORD'),
           database: configService.getOrThrow<string>('DB_DATABASE'),
           entities: [User, Product, Cart, CartItem],
+          migrations: [InitialSchema1791570000000],
+          migrationsRun: true,
           toLoadEntities: true,
           synchronize: false,
         };
