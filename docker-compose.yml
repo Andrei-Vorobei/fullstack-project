@@ -16,6 +16,7 @@ services:
       FRONTEND_URL: ${FRONTEND_URL:-}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in the project .env file}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?Set JWT_REFRESH_SECRET in the project .env file}
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in the project .env file}
       YANDEX_CLIENT_ID: ${YANDEX_CLIENT_ID:?Set YANDEX_CLIENT_ID in the project .env file}
       YANDEX_CLIENT_SECRET: ${YANDEX_CLIENT_SECRET:?Set YANDEX_CLIENT_SECRET in the project .env file}
       YANDEX_REDIRECT_URI: ${YANDEX_REDIRECT_URI:?Set YANDEX_REDIRECT_URI in the project .env file}

@@ -25,6 +25,7 @@ import { AddTelegramUsername1791720000000 } from './migrations/1791720000000-add
 import { Currency } from './currencies/entities/currency.entity.js';
 import { CurrenciesModule } from './currencies/currencies.module.js';
 import { AddProductCurrencies1791730000000 } from './migrations/1791730000000-add-product-currencies.js';
+import { OAuthSessionStore } from './auth/oauth-session.store.js';
 
 @Module({
   imports: [
@@ -99,6 +100,7 @@ import { AddProductCurrencies1791730000000 } from './migrations/1791730000000-ad
   providers: [
     Logger,
     AppService,
+    OAuthSessionStore,
     {
       provide: APP_FILTER,
       useClass: ServerExceptionFilter,

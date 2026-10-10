@@ -2,6 +2,8 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import session from 'express-session';
+import { OAuthSessionStore } from './auth/oauth-session.store.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -17,6 +19,25 @@ async function bootstrap() {
   );
 
   const configService = app.get(ConfigService);
+  const oauthSessionStore = app.get(OAuthSessionStore);
+
+  app.use(
+    session({
+      name: 'oauth.sid',
+      secret: oauthSessionStore.secret,
+      store: oauthSessionStore.store,
+      resave: false,
+      saveUninitialized: false,
+      proxy: oauthSessionStore.isProduction,
+      cookie: {
+        httpOnly: true,
+        secure: oauthSessionStore.isProduction,
+        sameSite: 'lax',
+        maxAge: 10 * 60 * 1000,
+      },
+    }),
+  );
+
   const allowedOrigins = configService
     .get<string>('FRONTEND_ORIGINS')
     ?.split(',')
@@ -34,6 +55,16 @@ async function bootstrap() {
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
+  app.enableShutdownHooks();
   await app.listen(3000);
 }
-bootstrap();
+void bootstrap().catch((error: unknown) => {
+  const reason =
+    error instanceof Error
+      ? (error.stack ?? error.message)
+      : typeof error === 'string'
+        ? error
+        : 'Unknown startup error';
+  process.stderr.write(`Application failed to start: ${reason}\n`);
+  process.exitCode = 1;
+});

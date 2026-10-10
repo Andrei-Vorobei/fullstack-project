@@ -39,6 +39,7 @@ DB_PASSWORD=dev-password
 DB_DATABASE=fullstack_db
 JWT_SECRET=<случайный-секрет>
 JWT_REFRESH_SECRET=<другой-случайный-секрет>
+SESSION_SECRET=<третий-случайный-секрет>
 YANDEX_CLIENT_ID=<client-id>
 YANDEX_CLIENT_SECRET=<client-secret>
 YANDEX_REDIRECT_URI=http://localhost:3000/oauth/yandex/callback
@@ -49,6 +50,8 @@ FRONTEND_URL=http://localhost:5173
 `FRONTEND_ORIGINS` содержит origin frontend, с которого браузеру разрешено обращаться к API. Несколько origin можно указать через запятую. Для локального Vite это обычно `http://localhost:5173`. Для генерации секретов можно использовать `openssl rand -base64 48`. Backend читает настройки из `backend/.env`, когда запускается из каталога `backend`.
 
 `FRONTEND_URL` — адрес, на который backend перенаправит браузер после входа через Яндекс. Он должен указывать на frontend и быть доступен пользователю.
+
+`SESSION_SECRET` — отдельный случайный секрет для подписи временной OAuth-сессии. Сгенерируйте его отдельно от JWT-секретов, например `openssl rand -base64 48`. В Docker Compose OAuth-сессии хранятся в отдельной таблице PostgreSQL `oauth_sessions`, которая создаётся автоматически. Для production cookie сессии безопасно передаётся только по HTTPS; reverse proxy должен передавать `X-Forwarded-Proto: https`.
 
 В отдельном терминале:
 
@@ -117,6 +120,7 @@ POSTGRES_DB=fullstack_db
 
 JWT_SECRET=<случайный-длинный-секрет>
 JWT_REFRESH_SECRET=<другой-случайный-длинный-секрет>
+SESSION_SECRET=<третий-случайный-длинный-секрет>
 
 YANDEX_CLIENT_ID=<production-client-id>
 YANDEX_CLIENT_SECRET=<production-client-secret>
@@ -126,7 +130,7 @@ FRONTEND_URL=https://example.com
 VITE_AUTH_API_URL=https://api.example.com
 ```
 
-`FRONTEND_ORIGINS` задаёт разрешённые адреса frontend для CORS; перечислите несколько через запятую, если нужно. `FRONTEND_URL` задаёт адрес возврата браузера после авторизации через Яндекс. Сгенерируйте отдельные секреты, например командой `openssl rand -base64 48`. Не используйте dev-значения и не коммитьте `.env`. В настройках приложения Яндекс OAuth укажите точно такой же callback URL. `VITE_AUTH_API_URL` встраивается во frontend во время сборки, поэтому после его изменения frontend надо пересобрать.
+`FRONTEND_ORIGINS` задаёт разрешённые адреса frontend для CORS; перечислите несколько через запятую, если нужно. `FRONTEND_URL` задаёт адрес возврата браузера после авторизации через Яндекс. `SESSION_SECRET` должен быть отдельным от JWT-секретов. Сгенерируйте секреты, например командой `openssl rand -base64 48`. Не используйте dev-значения и не коммитьте `.env`. В настройках приложения Яндекс OAuth укажите точно такой же callback URL. `VITE_AUTH_API_URL` встраивается во frontend во время сборки, поэтому после его изменения frontend надо пересобрать.
 
 ### 3. Настроить reverse proxy: Caddy или Nginx
 
