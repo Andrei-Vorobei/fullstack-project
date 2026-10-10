@@ -14,6 +14,7 @@ import { Request } from 'express';
 import { JwtGuard } from '../auth/jwt.guard.js';
 import { User } from '../users/entities/user.entity.js';
 import { AddCartItemDto } from './dto/add-cart-item.dto.js';
+import { MergeGuestCartDto } from './dto/merge-guest-cart.dto.js';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto.js';
 import { CartService } from './cart.service.js';
 
@@ -30,14 +31,23 @@ export class CartController {
   }
 
   @Post('items')
-  addItem(
-    @Req() request: AuthenticatedRequest,
-    @Body() dto: AddCartItemDto,
-  ) {
+  addItem(@Req() request: AuthenticatedRequest, @Body() dto: AddCartItemDto) {
     return this.cartService.addItem(
       request.user.id,
       dto.productId,
       dto.quantity,
+    );
+  }
+
+  @Post('merge-guest')
+  mergeGuestCart(
+    @Req() request: AuthenticatedRequest,
+    @Body() dto: MergeGuestCartDto,
+  ) {
+    return this.cartService.mergeGuestCart(
+      request.user.id,
+      dto.migrationId,
+      dto.items,
     );
   }
 
@@ -47,11 +57,7 @@ export class CartController {
     @Param('itemId', new ParseUUIDPipe()) itemId: string,
     @Body() dto: UpdateCartItemDto,
   ) {
-    return this.cartService.updateItem(
-      request.user.id,
-      itemId,
-      dto.quantity,
-    );
+    return this.cartService.updateItem(request.user.id, itemId, dto.quantity);
   }
 
   @Delete('items/:itemId')

@@ -2,17 +2,27 @@ import type { JSX } from 'react';
 
 import { HomeFilled, ProductFilled, ShoppingCartOutlined, StarFilled } from '@ant-design/icons';
 import { FloatButton, Layout, Menu, Modal, theme } from 'antd';
-import { useEffect, useMemo } from 'react';
+import { Suspense, useEffect, useMemo } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
+
+import type { Product } from '@/app-store/api/products-api';
 
 import { useGetMeQuery, useRefreshQuery } from '@/app-store/api/auth-api';
 import {
   useClearCartMutation,
+  useAddCartItemMutation,
   useRemoveCartItemMutation,
   useSetCartItemQuantityMutation,
 } from '@/app-store/api/cart-api';
 import { getIsOpenCartModal, setIsOpenCartModal } from '@/app-store/reducers/app-global';
-import { getCount } from '@/app-store/reducers/cart-slice';
+import {
+  addGuestCartItem,
+  clearGuestCart,
+  getCount,
+  removeGuestCartItem,
+  setGuestCartItemQuantity,
+  transferGuestCartToServer,
+} from '@/app-store/reducers/cart-slice';
 import { getProfile } from '@/app-store/reducers/user-slice';
 import Cart from '@/components/cart';
 import { useAppDispatch, useAppSelector } from '@/hooks';
@@ -30,10 +40,23 @@ const App: React.FC = (): JSX.Element => {
   const accessToken = useAppSelector((state) => state.user.accessToken);
   useGetMeQuery(undefined, { skip: !accessToken });
   const [clearCart] = useClearCartMutation();
+  const [addCartItem] = useAddCartItemMutation();
   const [removeCartItem] = useRemoveCartItemMutation();
   const [setCartItemQuantity] = useSetCartItemQuantityMutation();
   const cartCount = useAppSelector(getCount);
+  const guestMigrationId = useAppSelector((state) => state.cart.guestMigrationId);
+  const guestMigrationStatus = useAppSelector((state) => state.cart.guestMigrationStatus);
   const profile = useAppSelector(getProfile);
+
+  useEffect(() => {
+    if (
+      accessToken &&
+      guestMigrationId &&
+      (guestMigrationStatus === 'pending' || guestMigrationStatus === 'idle')
+    ) {
+      void dispatch(transferGuestCartToServer());
+    }
+  }, [accessToken, dispatch, guestMigrationId, guestMigrationStatus]);
 
   const sidebarItems = useMemo(() => {
     return [
@@ -85,16 +108,36 @@ const App: React.FC = (): JSX.Element => {
     dispatch(setIsOpenCartModal(isOpen));
   };
 
+  const handleAddToCart = (product: Product): void => {
+    if (accessToken) {
+      void addCartItem({ productId: product.id, quantity: 1 });
+    } else {
+      dispatch(addGuestCartItem(product));
+    }
+  };
+
   const handleClearCart = (): void => {
-    void clearCart();
+    if (accessToken) {
+      void clearCart();
+    } else {
+      dispatch(clearGuestCart());
+    }
   };
 
   const handleRemoveFromCart = (itemId: string): void => {
-    void removeCartItem(itemId);
+    if (accessToken) {
+      void removeCartItem(itemId);
+    } else {
+      dispatch(removeGuestCartItem(itemId));
+    }
   };
 
   const handleChangeQuantity = (itemId: string, quantity: number): void => {
-    void setCartItemQuantity({ itemId, quantity });
+    if (accessToken) {
+      void setCartItemQuantity({ itemId, quantity });
+    } else {
+      dispatch(setGuestCartItemQuantity({ itemId, quantity }));
+    }
   };
 
   return (
@@ -113,7 +156,9 @@ const App: React.FC = (): JSX.Element => {
       <Layout>
         <Header style={{ padding: 0, background: colorBgContainer }} />
         <Content style={{ margin: '24px 16px 0' }}>
-          <Outlet />
+          <Suspense fallback={<div role="status">Загрузка страницы...</div>}>
+            <Outlet context={{ onAddToCart: handleAddToCart }} />
+          </Suspense>
           <FloatButton
             style={{ height: '70px', width: '70px' }}
             tooltip="Корзина"

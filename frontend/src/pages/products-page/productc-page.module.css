@@ -6,6 +6,22 @@
   align-items: center;
 }
 
+.categoryAutocomplete {
+  height: 42px;
+}
+
+.categoryAutocomplete :global(.ant-select-selector) {
+  height: 42px !important;
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+}
+
+.categoryAutocomplete :global(.ant-select-selection-search-input),
+.categoryAutocomplete :global(.ant-select-selection-placeholder),
+.categoryAutocomplete :global(.ant-select-selection-item) {
+  line-height: 40px !important;
+}
+
 .cardsContainer {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));

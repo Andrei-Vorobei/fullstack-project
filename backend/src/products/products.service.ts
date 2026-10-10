@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { Repository } from 'typeorm';
+import { Category } from './entities/category.entity.js';
 import { Product } from './entities/products.entity.js';
 
 type ProductFromJson = Omit<Product, 'id' | 'externalId'> & {
@@ -30,7 +31,18 @@ export class ProductsService {
   constructor(
     @InjectRepository(Product)
     private readonly productsRepository: Repository<Product>,
+    @InjectRepository(Category)
+    private readonly categoriesRepository: Repository<Category>,
   ) {}
+
+  async getCategories(): Promise<string[]> {
+    const categories = await this.categoriesRepository.find({
+      select: { slug: true },
+      order: { slug: 'ASC' },
+    });
+
+    return categories.map(({ slug }) => slug);
+  }
 
   async getProductsAll(skip = 0, limit?: number): Promise<ProductsPage> {
     if (
@@ -105,7 +117,7 @@ export class ProductsService {
     let file: string;
 
     try {
-      file = await readFile(resolve(process.cwd(), 'products.json'), 'utf8');
+      file = await readFile(resolve(process.cwd(), 'import-products.json'), 'utf8');
     } catch (error) {
       if (
         error instanceof Error &&

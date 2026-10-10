@@ -14,8 +14,12 @@ import { ProductsModule } from './products/products.module.js';
 import { Product } from './products/entities/products.entity.js';
 import { Cart } from './cart/entities/cart.entity.js';
 import { CartItem } from './cart/entities/cart-item.entity.js';
+import { GuestCartMigration } from './cart/entities/guest-cart-migration.entity.js';
 import { CartModule } from './cart/cart.module.js';
 import { InitialSchema1791570000000 } from './migrations/1791570000000-initial-schema.js';
+import { Category } from './products/entities/category.entity.js';
+import { CreateCategories1791633600000 } from './migrations/1791633600000-create-categories.js';
+import { CreateGuestCartMigrations1791700000000 } from './migrations/1791700000000-create-guest-cart-migrations.js';
 
 @Module({
   imports: [
@@ -56,8 +60,19 @@ import { InitialSchema1791570000000 } from './migrations/1791570000000-initial-s
           username: configService.getOrThrow<string>('DB_USERNAME'),
           password: configService.getOrThrow<string>('DB_PASSWORD'),
           database: configService.getOrThrow<string>('DB_DATABASE'),
-          entities: [User, Product, Cart, CartItem],
-          migrations: [InitialSchema1791570000000],
+          entities: [
+            User,
+            Product,
+            Cart,
+            CartItem,
+            Category,
+            GuestCartMigration,
+          ],
+          migrations: [
+            InitialSchema1791570000000,
+            CreateCategories1791633600000,
+            CreateGuestCartMigrations1791700000000,
+          ],
           migrationsRun: true,
           installExtensions: false,
           toLoadEntities: true,

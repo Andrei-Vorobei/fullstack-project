@@ -1,15 +1,15 @@
-import type { JSX } from 'react/jsx-runtime';
-
+import { lazy, type JSX } from 'react';
 import { Routes, Route } from 'react-router';
 
 import App from '@/components/App/App';
-import HomePage from '@/pages/home-page';
-import LoginPage from '@/pages/login-page';
-import NotFoundPage from '@/pages/not-found-page';
-import ProductsPage from '@/pages/products-page';
-import ProfilePage from '@/pages/profile-page';
-import RegisterPage from '@/pages/register-page';
-import UsersPage from '@/pages/users-page';
+
+const HomePage = lazy(() => import('@/pages/home-page'));
+const LoginPage = lazy(() => import('@/pages/login-page'));
+const NotFoundPage = lazy(() => import('@/pages/not-found-page'));
+const ProductsPage = lazy(() => import('@/pages/products-page'));
+const ProfilePage = lazy(() => import('@/pages/profile-page'));
+const RegisterPage = lazy(() => import('@/pages/register-page'));
+const UsersPage = lazy(() => import('@/pages/users-page'));
 
 export const AppRouter = (): JSX.Element => {
   return (

@@ -1,12 +1,17 @@
 ﻿import type { JSX } from 'react';
 
-import { Button, Checkbox, Flex, Input, Pagination, Spin, type PaginationProps } from 'antd';
+import { AutoComplete, Button, Checkbox, Flex, Pagination, Spin, type PaginationProps } from 'antd';
 import { useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router';
+import { useOutletContext, useSearchParams } from 'react-router';
 
-import { useAddCartItemMutation } from '@/app-store/api/cart-api';
-import { useGetFilteredProductsQuery, useGetProductsQuery, type Product } from '@/app-store/api/products-api';
+import {
+  useGetCategoriesQuery,
+  useGetFilteredProductsQuery,
+  useGetProductsQuery,
+  type Product,
+} from '@/app-store/api/products-api';
 import ProductCard from '@/components/product-card';
+import TextInput from '@/components/UI/text-input/text-input';
 
 import styles from './productc-page.module.css';
 const DEFAULT_PAGE_SIZE = 10;
@@ -16,9 +21,14 @@ const parseQueryInteger = (value: string | null, minimum: number): number | null
   const parsedValue = Number(value);
   return Number.isSafeInteger(parsedValue) && parsedValue >= minimum ? parsedValue : null;
 };
+type ProductsPageContext = {
+  onAddToCart: (product: Product) => void;
+};
+
 const ProductsPage = (): JSX.Element => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [addCartItem] = useAddCartItemMutation();
+  const { onAddToCart } = useOutletContext<ProductsPageContext>();
+  const { data: categories = [], error: categoriesError } = useGetCategoriesQuery();
 
   const category = searchParams.get('category') ?? '';
   const brand = searchParams.get('brand') ?? '';
@@ -59,14 +69,15 @@ const ProductsPage = (): JSX.Element => {
   }, [data, filteredProducts, hasActiveFilters]);
 
   const errorMessage = useMemo(() => {
-    if (!error && !filteredError) return null;
-    const activeError = hasActiveFilters ? filteredError : error;
+    const activeError = categoriesError ?? (hasActiveFilters ? filteredError : error);
+    if (!activeError) return null;
+
     return activeError instanceof Error
       ? activeError.message
       : typeof activeError === 'string'
         ? activeError
         : (JSON.stringify(activeError) ?? 'Неизвестная ошибка');
-  }, [error, filteredError, hasActiveFilters]);
+  }, [categoriesError, error, filteredError, hasActiveFilters]);
 
   const products = hasActiveFilters ? filteredProducts : (data?.products ?? []);
   const isLoadingList = hasActiveFilters ? filteredLoading : isLoading;
@@ -89,10 +100,6 @@ const ProductsPage = (): JSX.Element => {
     setSearchParams(next, { replace: true });
   };
 
-  const addToCartHandler = (product: Product): void => {
-    void addCartItem({ productId: product.id, quantity: 1 });
-  };
-
   const paginationHandler: PaginationProps['onChange'] = (current: number, newPageSize: number): void => {
     setSearchParams((params) => {
       params.set('limit', String(newPageSize));
@@ -104,24 +111,35 @@ const ProductsPage = (): JSX.Element => {
   return (
     <>
       <div className={styles.filters}>
-        <Input
+        <TextInput
+          name="search"
           placeholder="Поиск по названию или описанию"
           value={search}
           onChange={(event) => updateFilter('search', event.target.value)}
         />
-        <Input
+        <AutoComplete
+          allowClear
+          className={styles.categoryAutocomplete}
           placeholder="Категория"
           value={category}
-          onChange={(event) => updateFilter('category', event.target.value)}
+          options={categories.map((value) => ({ value, label: value }))}
+          onChange={(value: string) => updateFilter('category', value)}
         />
-        <Input placeholder="Бренд" value={brand} onChange={(event) => updateFilter('brand', event.target.value)} />
-        <Input
+        <TextInput
+          name="brand"
+          placeholder="Бренд"
+          value={brand}
+          onChange={(event) => updateFilter('brand', event.target.value)}
+        />
+        <TextInput
+          name="minPrice"
           type="number"
           placeholder="Мин. цена"
           value={minPrice}
           onChange={(event) => updateFilter('minPrice', event.target.value)}
         />
-        <Input
+        <TextInput
+          name="maxPrice"
           type="number"
           placeholder="Макс. цена"
           value={maxPrice}
@@ -141,7 +159,7 @@ const ProductsPage = (): JSX.Element => {
       {!isLoadingList && products.length === 0 && <p>Товары не найдены</p>}
       <ul className={styles.cardsContainer}>
         {products.map((product) => (
-          <ProductCard key={product.id} product={product} onAddToCart={addToCartHandler} />
+          <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
         ))}
       </ul>
       {!hasActiveFilters && (

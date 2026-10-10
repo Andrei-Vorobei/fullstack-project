@@ -1,4 +1,5 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
+
 import { axiosBaseQuery } from './auth-api';
 
 export type ProductReview = {
@@ -23,7 +24,7 @@ export type ProductMeta = {
 };
 
 export type Product = {
-  id: number;
+  id: string;
   title: string;
   description: string;
   category: string;
@@ -63,6 +64,8 @@ export type ProductFilters = {
   inStock?: boolean;
 };
 
+export type ProductCategory = string;
+
 export const productsApi = createApi({
   reducerPath: 'productsApi',
   baseQuery: axiosBaseQuery({
@@ -70,6 +73,9 @@ export const productsApi = createApi({
   }),
   tagTypes: ['Product'],
   endpoints: (builder) => ({
+    getCategories: builder.query<ProductCategory[], void>({
+      query: () => ({ url: '/products/categories' }),
+    }),
     getProducts: builder.query<ProductsResponse, { limit?: number; skip?: number }>({
       query: ({ limit, skip }) => ({
         url: '/products',
@@ -109,6 +115,7 @@ export const productsApi = createApi({
 });
 
 export const {
+  useGetCategoriesQuery,
   useGetProductsQuery,
   useGetFilteredProductsQuery,
   useGetProductByIdQuery,

@@ -3,9 +3,9 @@ import type { JSX } from 'react';
 import { Modal, message } from 'antd';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
-import { useRemoveUserMutation, useUpdateUserMutation } from '@/app-store/api/auth-api';
+import { useLogoutMutation, useRemoveUserMutation, useUpdateUserMutation } from '@/app-store/api/auth-api';
 import { useImportProductsMutation } from '@/app-store/api/products-api';
 import { getProfile, type UserRole } from '@/app-store/reducers/user-slice';
 import Button from '@/components/UI/button/button';
@@ -28,8 +28,10 @@ type ProfileFormValues = {
 };
 
 const ProfilePage = (): JSX.Element => {
+  const navigate = useNavigate();
   const profile = useAppSelector(getProfile);
   const [isEditing, setIsEditing] = useState(false);
+  const [logout, logoutResult] = useLogoutMutation();
   const [updateUser, updateResult] = useUpdateUserMutation();
   const [removeUser, removeResult] = useRemoveUserMutation();
   const [importProducts, importResult] = useImportProductsMutation();
@@ -96,6 +98,15 @@ const ProfilePage = (): JSX.Element => {
       await messageApi.success(result.message);
     } catch {
       await messageApi.error('Не удалось импортировать товары. Попробуйте ещё раз.');
+    }
+  };
+
+  const handleLogout = async (): Promise<void> => {
+    try {
+      await logout().unwrap();
+      await navigate('/login');
+    } catch {
+      await messageApi.error('Не удалось выйти из аккаунта. Попробуйте ещё раз.');
     }
   };
 
@@ -286,7 +297,20 @@ const ProfilePage = (): JSX.Element => {
                       {importResult.isLoading ? 'Импортируем...' : 'Импортировать товары'}
                     </Button>
                   ) : null}
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={logoutResult.isLoading}
+                    onClick={() => void handleLogout()}
+                  >
+                    {logoutResult.isLoading ? 'Выходим...' : 'Выйти из профиля'}
+                  </Button>
                 </div>
+                {logoutResult.isError ? (
+                  <p className={styles.error} role="alert">
+                    Не удалось выйти из аккаунта. Попробуйте ещё раз.
+                  </p>
+                ) : null}
                 {removeResult.isError ? (
                   <p className={styles.error} role="alert">
                     Не удалось удалить аккаунт. Попробуйте ещё раз.

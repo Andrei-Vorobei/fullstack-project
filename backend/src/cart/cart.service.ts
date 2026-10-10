@@ -9,6 +9,7 @@ import { User } from '../users/entities/user.entity.js';
 import { Product } from '../products/entities/products.entity.js';
 import { Cart } from './entities/cart.entity.js';
 import { CartItem } from './entities/cart-item.entity.js';
+import { GuestCartMigration } from './entities/guest-cart-migration.entity.js';
 
 export interface CartResponse {
   id: string | null;
@@ -65,6 +66,64 @@ export class CartService {
       }
 
       await manager.save(CartItem, item);
+      return this.getCartWithManager(manager, cart.id);
+    });
+  }
+
+  async mergeGuestCart(
+    userId: string,
+    migrationId: string,
+    guestItems: Array<{ productId: string; quantity: number }>,
+  ): Promise<CartResponse> {
+    return this.dataSource.transaction(async (manager) => {
+      const { user, cart } = await this.getOrCreateCart(manager, userId);
+      const existingMigration = await manager.findOne(GuestCartMigration, {
+        where: { user: { id: user.id }, migrationId },
+      });
+
+      if (existingMigration) {
+        return this.getCartWithManager(manager, cart.id);
+      }
+
+      const quantitiesByProduct = new Map<string, number>();
+      for (const item of guestItems) {
+        quantitiesByProduct.set(
+          item.productId,
+          (quantitiesByProduct.get(item.productId) ?? 0) + item.quantity,
+        );
+      }
+
+      for (const [productId, quantity] of quantitiesByProduct) {
+        const product = await manager.findOne(Product, {
+          where: { id: productId },
+          lock: { mode: 'pessimistic_write' },
+        });
+
+        if (!product) {
+          throw new NotFoundException('Товар не найден');
+        }
+
+        const item = await manager.findOne(CartItem, {
+          where: { cart: { id: cart.id }, product: { id: product.id } },
+        });
+        const nextQuantity = (item?.quantity ?? 0) + quantity;
+        this.ensureAvailableQuantity(product, nextQuantity);
+
+        if (item) {
+          item.quantity = nextQuantity;
+          await manager.save(CartItem, item);
+        } else {
+          await manager.save(
+            CartItem,
+            manager.create(CartItem, { cart, product, quantity }),
+          );
+        }
+      }
+
+      await manager.save(
+        GuestCartMigration,
+        manager.create(GuestCartMigration, { user, migrationId }),
+      );
       return this.getCartWithManager(manager, cart.id);
     });
   }

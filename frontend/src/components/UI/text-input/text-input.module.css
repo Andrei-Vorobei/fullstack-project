@@ -32,6 +32,10 @@
 }
 
 .passwordInput {
+  padding-right: 72px;
+}
+
+.clearableInput {
   padding-right: 40px;
 }
 
@@ -48,6 +52,34 @@
   color: #6b7280;
   cursor: pointer;
   transform: translateY(-50%);
+}
+
+.clearButton {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.clearButtonWithToggle {
+  right: 44px;
+}
+
+.clearButton:disabled {
+  cursor: not-allowed;
+}
+
+.clearButton:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }
 
 .passwordToggle:disabled {

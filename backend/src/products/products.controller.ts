@@ -25,6 +25,11 @@ type AuthenticatedRequest = {
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
+  @Get('categories')
+  getCategories() {
+    return this.productsService.getCategories();
+  }
+
   @Get()
   getProductsAll(
     @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip: number,

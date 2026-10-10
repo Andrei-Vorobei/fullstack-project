@@ -61,3 +61,5 @@ data/
 manual.*.md
 manual-*.md
 settings.json
+import-*.json
+import.*.json

@@ -6,7 +6,7 @@ export type CartItem = {
   id: string;
   quantity: number;
   product: {
-    id: number;
+    id: string;
     title: string;
     price: number;
     discountPercentage: number;
@@ -22,8 +22,13 @@ export type CartResponse = {
 };
 
 export type AddCartItemRequest = {
-  productId: number;
+  productId: string;
   quantity: number;
+};
+
+export type MergeGuestCartRequest = {
+  migrationId: string;
+  items: { productId: string; quantity: number }[];
 };
 
 export type SetCartItemQuantityRequest = {
@@ -47,6 +52,14 @@ export const cartApi = createApi({
         url: '/cart/items',
         method: 'POST',
         data: item,
+      }),
+      invalidatesTags: ['Cart'],
+    }),
+    mergeGuestCart: builder.mutation<CartResponse, MergeGuestCartRequest>({
+      query: (guestCart) => ({
+        url: '/cart/merge-guest',
+        method: 'POST',
+        data: guestCart,
       }),
       invalidatesTags: ['Cart'],
     }),

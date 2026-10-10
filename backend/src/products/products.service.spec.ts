@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Category } from './entities/category.entity.js';
 import { Product } from './entities/products.entity.js';
 import { ProductsService } from './products.service.js';
 
@@ -15,6 +16,7 @@ describe('ProductsService', () => {
     Repository<Product>,
     'findAndCount' | 'create' | 'save' | 'upsert'
   >;
+  let categoriesRepository: Pick<Repository<Category>, 'find'>;
 
   beforeEach(async () => {
     productsRepository = {
@@ -22,6 +24,9 @@ describe('ProductsService', () => {
       create: vi.fn((product) => product),
       save: vi.fn(async (product) => product),
       upsert: vi.fn(),
+    };
+    categoriesRepository = {
+      find: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -31,6 +36,10 @@ describe('ProductsService', () => {
           provide: getRepositoryToken(Product),
           useValue: productsRepository,
         },
+        {
+          provide: getRepositoryToken(Category),
+          useValue: categoriesRepository,
+        },
       ],
     }).compile();
 
@@ -39,6 +48,22 @@ describe('ProductsService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  it('returns category slugs in alphabetical order', async () => {
+    vi.mocked(categoriesRepository.find).mockResolvedValue([
+      { slug: 'beauty' },
+      { slug: 'fragrances' },
+    ] as Category[]);
+
+    await expect(service.getCategories()).resolves.toEqual([
+      'beauty',
+      'fragrances',
+    ]);
+    expect(categoriesRepository.find).toHaveBeenCalledWith({
+      select: { slug: true },
+      order: { slug: 'ASC' },
+    });
   });
 
   it('returns all products and defaults the limit to the total count', async () => {

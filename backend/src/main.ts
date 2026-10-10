@@ -17,12 +17,15 @@ async function bootstrap() {
   );
 
   const configService = app.get(ConfigService);
-  const allowedOrigins =
-    configService
-      .get<string>('FRONTEND_ORIGINS')
-      ?.split(',')
-      .map((origin) => origin.trim())
-      .filter(Boolean) ?? ['http://localhost:5173'];
+  const allowedOrigins = configService
+    .get<string>('FRONTEND_ORIGINS')
+    ?.split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean) ?? [
+    'http://localhost:5173',
+    'http://localhost:4173',
+    'http://127.0.0.1:4173',
+  ];
 
   app.enableCors({
     origin: allowedOrigins,

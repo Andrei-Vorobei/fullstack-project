@@ -6,6 +6,7 @@ import { CartService } from './cart.service.js';
 import { User } from '../users/entities/user.entity.js';
 import { Product } from '../products/entities/products.entity.js';
 import { CartItem } from './entities/cart-item.entity.js';
+import { GuestCartMigration } from './entities/guest-cart-migration.entity.js';
 
 describe('CartService', () => {
   let service: CartService;
@@ -106,5 +107,36 @@ describe('CartService', () => {
       totalItems: 1,
       totalPrice: 5,
     });
+
+  });
+
+  it('does not apply a guest cart migration more than once', async () => {
+    const user = { id: 'user-id' } as User;
+    const cart = { id: 'cart-id', items: [] } as Cart;
+    const manager = {
+      findOne: vi.fn(async (entity: unknown) => {
+        if (entity === User) return user;
+        if (entity === Cart) return cart;
+        if (entity === GuestCartMigration) return { id: 'migration-record-id' };
+        return null;
+      }),
+      create: vi.fn((_entity: unknown, value: unknown) => value),
+      save: vi.fn(),
+    } as unknown as EntityManager;
+
+    vi.mocked(dataSource.transaction).mockImplementation(async (callback) =>
+      callback(manager),
+    );
+
+    await expect(
+      service.mergeGuestCart('user-id', 'migration-id', [
+        { productId: 'product-id', quantity: 2 },
+      ]),
+    ).resolves.toMatchObject({
+      id: 'cart-id',
+      totalItems: 0,
+      totalPrice: 0,
+    });
+    expect(manager.save).not.toHaveBeenCalled();
   });
 });

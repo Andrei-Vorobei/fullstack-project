@@ -4,7 +4,8 @@ import { DeleteOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import { Button, Divider, Empty, Spin, Typography } from 'antd';
 
 import { useGetCartQuery, type CartItem } from '@/app-store/api/cart-api';
-import { useAppSelector } from '@/hooks';
+import { getCart, transferGuestCartToServer } from '@/app-store/reducers/cart-slice';
+import { useAppDispatch, useAppSelector } from '@/hooks';
 
 import styles from './cart.module.css';
 
@@ -18,14 +19,41 @@ const formatPrice = (amount: number): string =>
   new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'USD' }).format(amount);
 
 const Cart = ({ onRemoveProduct, onChangeQuantity, onClearCart }: CartProps): JSX.Element => {
+  const dispatch = useAppDispatch();
   const accessToken = useAppSelector((state) => state.user.accessToken);
-  const { data: cart, isLoading, error } = useGetCartQuery(undefined, { skip: !accessToken });
+  const localCart = useAppSelector(getCart);
+  const isMigrating =
+    (Boolean(accessToken) && Boolean(localCart.guestMigrationId)) ||
+    localCart.guestMigrationStatus === 'pending' ||
+    localCart.guestMigrationStatus === 'in-progress';
+  const migrationFailed = localCart.guestMigrationStatus === 'error';
+  const {
+    data: serverCart,
+    isLoading,
+    error,
+  } = useGetCartQuery(undefined, { skip: !accessToken || isMigrating || migrationFailed });
+  const cart = accessToken && !isMigrating && !migrationFailed ? serverCart : localCart;
 
-  if (isLoading) {
+  if (isMigrating) {
+    return <Spin description="Переносим корзину в аккаунт..." />;
+  }
+
+  if (migrationFailed) {
+    return (
+      <div>
+        <Typography.Text type="danger" role="alert">
+          Не удалось перенести корзину в аккаунт.
+        </Typography.Text>
+        <Button onClick={() => void dispatch(transferGuestCartToServer())}>Повторить перенос</Button>
+      </div>
+    );
+  }
+
+  if (accessToken && isLoading) {
     return <Spin description="Загрузка корзины..." />;
   }
 
-  if (error) {
+  if (accessToken && error) {
     return (
       <Typography.Text type="danger" role="alert">
         Не удалось загрузить корзину. Попробуйте ещё раз.
