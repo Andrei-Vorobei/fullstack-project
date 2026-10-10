@@ -69,7 +69,7 @@ describe('ProductsController', () => {
       }),
     ).resolves.toEqual({
       imported: 0,
-      message: 'Файл products.json не найден, импорт не выполнен',
+      message: 'Файл import-products.json не найден, импорт не выполнен',
     });
   });
 

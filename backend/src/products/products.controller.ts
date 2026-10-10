@@ -74,7 +74,7 @@ export class ProductsController {
     if (!result.fileFound) {
       return {
         imported: 0,
-        message: 'Файл products.json не найден, импорт не выполнен',
+        message: 'Файл import-products.json не найден, импорт не выполнен',
       };
     }
 
