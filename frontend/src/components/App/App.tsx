@@ -18,6 +18,7 @@ import { useGetMeQuery, useLogoutMutation, useRefreshQuery } from '@/app-store/a
 import {
   useClearCartMutation,
   useAddCartItemMutation,
+  useGetCartQuery,
   useRemoveCartItemMutation,
   useSetCartItemQuantityMutation,
 } from '@/app-store/api/cart-api';
@@ -59,15 +60,24 @@ const App: React.FC = (): JSX.Element => {
 
   useRefreshQuery();
   const accessToken = useAppSelector((state) => state.user.accessToken);
+  const profile = useAppSelector(getProfile);
+  const guestMigrationId = useAppSelector((state) => state.cart.guestMigrationId);
+  const guestMigrationStatus = useAppSelector((state) => state.cart.guestMigrationStatus);
   useGetMeQuery(undefined, { skip: !accessToken });
+  useGetCartQuery(undefined, {
+    skip:
+      !accessToken ||
+      !profile ||
+      Boolean(guestMigrationId) ||
+      guestMigrationStatus === 'pending' ||
+      guestMigrationStatus === 'in-progress' ||
+      guestMigrationStatus === 'error',
+  });
   const [clearCart] = useClearCartMutation();
   const [addCartItem] = useAddCartItemMutation();
   const [removeCartItem] = useRemoveCartItemMutation();
   const [setCartItemQuantity] = useSetCartItemQuantityMutation();
   const cartCount = useAppSelector(getCount);
-  const guestMigrationId = useAppSelector((state) => state.cart.guestMigrationId);
-  const guestMigrationStatus = useAppSelector((state) => state.cart.guestMigrationStatus);
-  const profile = useAppSelector(getProfile);
   const isAdmin = profile?.roles.includes('admin') ?? false;
   const pageTitle = /^\/users\/[^/]+\/cart$/.test(location.pathname)
     ? 'User cart'

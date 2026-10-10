@@ -5,21 +5,37 @@ import { cartApi } from './api/cart-api';
 import { productsApi } from './api/products-api';
 import { usersApi } from './api/users-api';
 import { saveGuestCart } from './cart-storage';
+import { clearGuestCart } from './reducers/cart-slice';
 import { rootReducer } from './root-reducer';
 
-const listenerMiddleware = createListenerMiddleware();
+const listenerMiddleware = createListenerMiddleware<ReturnType<typeof rootReducer>>();
 
 listenerMiddleware.startListening({
-  matcher: isAnyOf(authApi.endpoints.login.matchFulfilled, authApi.endpoints.getMe.matchFulfilled),
-  effect: (_action, { dispatch }) => {
-    dispatch(usersApi.util.invalidateTags(['Users']));
+  matcher: isAnyOf(
+    authApi.endpoints.login.matchFulfilled,
+    authApi.endpoints.register.matchFulfilled,
+    authApi.endpoints.getMe.matchFulfilled
+  ),
+  effect: (_action, listenerApi) => {
+    const previousUserId = listenerApi.getOriginalState().user.profile?.id;
+    const currentUserId = listenerApi.getState().user.profile?.id;
+
+    listenerApi.dispatch(usersApi.util.invalidateTags(['Users']));
+    if (currentUserId && currentUserId !== previousUserId) {
+      listenerApi.dispatch(cartApi.util.resetApiState());
+      if (previousUserId && !listenerApi.getState().cart.guestMigrationId) {
+        listenerApi.dispatch(clearGuestCart());
+      }
+    }
   },
 });
 
 listenerMiddleware.startListening({
-  matcher: authApi.endpoints.logout.matchFulfilled,
-  effect: (_action, { dispatch }) => {
-    dispatch(usersApi.util.resetApiState());
+  matcher: isAnyOf(authApi.endpoints.logout.matchFulfilled, authApi.endpoints.removeUser.matchFulfilled),
+  effect: (_action, listenerApi) => {
+    listenerApi.dispatch(usersApi.util.resetApiState());
+    listenerApi.dispatch(cartApi.util.resetApiState());
+    listenerApi.dispatch(authApi.util.invalidateTags(['User']));
   },
 });
 

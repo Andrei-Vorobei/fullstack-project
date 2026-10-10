@@ -5,6 +5,7 @@ import { Button, Divider, Empty, Spin, Typography } from 'antd';
 
 import { useGetCartQuery, type CartItem } from '@/app-store/api/cart-api';
 import { getCart, transferGuestCartToServer } from '@/app-store/reducers/cart-slice';
+import { getProfile } from '@/app-store/reducers/user-slice';
 import { useAppDispatch, useAppSelector } from '@/hooks';
 import { formatCurrency, type CurrencyCode } from '@/utils/currency';
 
@@ -19,6 +20,7 @@ type CartProps = {
 const Cart = ({ onRemoveProduct, onChangeQuantity, onClearCart }: CartProps): JSX.Element => {
   const dispatch = useAppDispatch();
   const accessToken = useAppSelector((state) => state.user.accessToken);
+  const profile = useAppSelector(getProfile);
   const localCart = useAppSelector(getCart);
   const isMigrating =
     (Boolean(accessToken) && Boolean(localCart.guestMigrationId)) ||
@@ -29,8 +31,8 @@ const Cart = ({ onRemoveProduct, onChangeQuantity, onClearCart }: CartProps): JS
     data: serverCart,
     isLoading,
     error,
-  } = useGetCartQuery(undefined, { skip: !accessToken || isMigrating || migrationFailed });
-  const cart = accessToken && !isMigrating && !migrationFailed ? serverCart : localCart;
+  } = useGetCartQuery(undefined, { skip: !accessToken || !profile || isMigrating || migrationFailed });
+  const cart = accessToken && profile && !isMigrating && !migrationFailed ? serverCart : localCart;
 
   if (isMigrating) {
     return <Spin description="Переносим корзину в аккаунт..." />;
@@ -47,7 +49,7 @@ const Cart = ({ onRemoveProduct, onChangeQuantity, onClearCart }: CartProps): JS
     );
   }
 
-  if (accessToken && isLoading) {
+  if (accessToken && (!profile || isLoading)) {
     return <Spin description="Загрузка корзины..." />;
   }
 
