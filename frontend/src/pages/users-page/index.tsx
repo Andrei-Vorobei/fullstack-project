@@ -157,7 +157,7 @@ const UsersPage = (): JSX.Element => {
                       </Tag>
                     ))}
                   </span>
-                  <span className={styles.userEmail}>{user.email ?? 'Подробная информация'}</span>
+                  {isAdmin && user.email ? <span className={styles.userEmail}>{user.email}</span> : null}
                   {user.telegramUsername && <span className={styles.userTelegram}>@{user.telegramUsername}</span>}
                 </span>
               </button>
@@ -235,10 +235,12 @@ const UsersPage = (): JSX.Element => {
               </div>
             </div>
             <dl className={styles.detailsList}>
-              <div>
-                <dt>Электронная почта</dt>
-                <dd>{selectedUser.email ?? 'Не указана'}</dd>
-              </div>
+              {isAdmin ? (
+                <div>
+                  <dt>Электронная почта</dt>
+                  <dd>{selectedUser.email ?? 'Не указана'}</dd>
+                </div>
+              ) : null}
               <div>
                 <dt>Telegram</dt>
                 <dd>

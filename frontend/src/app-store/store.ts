@@ -1,4 +1,4 @@
-import { configureStore, createListenerMiddleware, type Middleware } from '@reduxjs/toolkit';
+import { configureStore, createListenerMiddleware, isAnyOf, type Middleware } from '@reduxjs/toolkit';
 
 import { authApi } from './api/auth-api';
 import { cartApi } from './api/cart-api';
@@ -8,6 +8,20 @@ import { saveGuestCart } from './cart-storage';
 import { rootReducer } from './root-reducer';
 
 const listenerMiddleware = createListenerMiddleware();
+
+listenerMiddleware.startListening({
+  matcher: isAnyOf(authApi.endpoints.login.matchFulfilled, authApi.endpoints.getMe.matchFulfilled),
+  effect: (_action, { dispatch }) => {
+    dispatch(usersApi.util.invalidateTags(['Users']));
+  },
+});
+
+listenerMiddleware.startListening({
+  matcher: authApi.endpoints.logout.matchFulfilled,
+  effect: (_action, { dispatch }) => {
+    dispatch(usersApi.util.resetApiState());
+  },
+});
 
 listenerMiddleware.startListening({
   matcher: authApi.endpoints.updateUser.matchFulfilled,

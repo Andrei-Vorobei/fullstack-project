@@ -31,7 +31,7 @@ const HomePage = (): JSX.Element => {
         <div className={styles.description}>
           <p className={styles.eyebrow}>О проекте</p>
           <h2 className={styles.sectionTitle} id="about-title">
-            Магазин, чтобы показать fullstack-разработку на практике
+            Магазин желаний, чтобы показать fullstack-разработку на практике
           </h2>
           <p className={styles.body}>
             В приложении есть каталог товаров с фильтрами, категории, профиль пользователя и корзина. Гостевая

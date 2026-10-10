@@ -53,10 +53,11 @@
 
 .userCardMain {
   display: flex;
+  width: 100%;
   min-width: 0;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 12px;
   padding: 8px 0;
   border: 0;
@@ -74,6 +75,7 @@
 
 .cartLink {
   display: inline-flex;
+  align-self: end;
   align-items: center;
   justify-content: center;
   gap: 8px;
