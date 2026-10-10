@@ -43,9 +43,12 @@ YANDEX_CLIENT_ID=<client-id>
 YANDEX_CLIENT_SECRET=<client-secret>
 YANDEX_REDIRECT_URI=http://localhost:3000/oauth/yandex/callback
 FRONTEND_ORIGINS=http://localhost:5173
+FRONTEND_URL=http://localhost:5173
 ```
 
 `FRONTEND_ORIGINS` содержит origin frontend, с которого браузеру разрешено обращаться к API. Несколько origin можно указать через запятую. Для локального Vite это обычно `http://localhost:5173`. Для генерации секретов можно использовать `openssl rand -base64 48`. Backend читает настройки из `backend/.env`, когда запускается из каталога `backend`.
+
+`FRONTEND_URL` — адрес, на который backend перенаправит браузер после входа через Яндекс. Он должен указывать на frontend и быть доступен пользователю.
 
 В отдельном терминале:
 
@@ -119,10 +122,11 @@ YANDEX_CLIENT_ID=<production-client-id>
 YANDEX_CLIENT_SECRET=<production-client-secret>
 YANDEX_REDIRECT_URI=https://api.example.com/oauth/yandex/callback
 FRONTEND_ORIGINS=https://example.com
+FRONTEND_URL=https://example.com
 VITE_AUTH_API_URL=https://api.example.com
 ```
 
-`FRONTEND_ORIGINS` задаёт разрешённые адреса frontend для CORS; перечислите несколько через запятую, если нужно. Сгенерируйте отдельные секреты, например командой `openssl rand -base64 48`. Не используйте dev-значения и не коммитьте `.env`. В настройках приложения Яндекс OAuth укажите точно такой же callback URL. `VITE_AUTH_API_URL` встраивается во frontend во время сборки, поэтому после его изменения frontend надо пересобрать.
+`FRONTEND_ORIGINS` задаёт разрешённые адреса frontend для CORS; перечислите несколько через запятую, если нужно. `FRONTEND_URL` задаёт адрес возврата браузера после авторизации через Яндекс. Сгенерируйте отдельные секреты, например командой `openssl rand -base64 48`. Не используйте dev-значения и не коммитьте `.env`. В настройках приложения Яндекс OAuth укажите точно такой же callback URL. `VITE_AUTH_API_URL` встраивается во frontend во время сборки, поэтому после его изменения frontend надо пересобрать.
 
 ### 3. Настроить reverse proxy: Caddy или Nginx
 

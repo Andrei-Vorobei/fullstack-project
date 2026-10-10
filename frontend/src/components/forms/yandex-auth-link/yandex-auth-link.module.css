@@ -1,0 +1,39 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+  text-align: center;
+}
+
+.separator {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #111827;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.link:hover {
+  border-color: #9ca3af;
+  background: #f9fafb;
+}
+
+.link:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}

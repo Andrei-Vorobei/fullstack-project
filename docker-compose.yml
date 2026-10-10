@@ -13,6 +13,7 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the project .env file}
       DB_DATABASE: ${POSTGRES_DB:?Set POSTGRES_DB in the project .env file}
       FRONTEND_ORIGINS: ${FRONTEND_ORIGINS:?Set FRONTEND_ORIGINS in the project .env file}
+      FRONTEND_URL: ${FRONTEND_URL:-}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in the project .env file}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?Set JWT_REFRESH_SECRET in the project .env file}
       YANDEX_CLIENT_ID: ${YANDEX_CLIENT_ID:?Set YANDEX_CLIENT_ID in the project .env file}

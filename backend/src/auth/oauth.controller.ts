@@ -29,8 +29,8 @@ export class OAuthController {
   @Get('yandex/callback')
   async yandexCallback(
     @Req() req: Request & { user?: AuthenticatedUser },
-    @Res({ passthrough: true }) response: Response,
-  ) {
+    @Res() response: Response,
+  ): Promise<void> {
     if (!req.user) {
       throw new UnauthorizedException(
         'Не удалось получить данные пользователя от Яндекса',
@@ -40,6 +40,14 @@ export class OAuthController {
     const tokens = await this.authService.createTokenPair(req.user.id);
     setRefreshCookie(response, tokens.refreshToken, this.configService);
 
-    return { access_token: tokens.accessToken };
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL')?.trim() ||
+      this.configService
+        .get<string>('FRONTEND_ORIGINS')
+        ?.split(',')[0]
+        ?.trim() ||
+      'http://localhost:5173';
+
+    response.redirect(frontendUrl);
   }
 }

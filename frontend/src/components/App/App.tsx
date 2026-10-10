@@ -68,6 +68,7 @@ const App: React.FC = (): JSX.Element => {
   const guestMigrationId = useAppSelector((state) => state.cart.guestMigrationId);
   const guestMigrationStatus = useAppSelector((state) => state.cart.guestMigrationStatus);
   const profile = useAppSelector(getProfile);
+  const isAdmin = profile?.roles.includes('admin') ?? false;
   const pageTitle = /^\/users\/[^/]+\/cart$/.test(location.pathname)
     ? 'User cart'
     : (pageTitles[location.pathname] ?? 'Not found');
@@ -94,16 +95,20 @@ const App: React.FC = (): JSX.Element => {
         icon: <ProductFilled />,
         label: 'Products',
       },
-      {
-        key: '/login',
-        icon: <StarFilled />,
-        label: 'login',
-      },
-      {
-        key: '/register',
-        icon: <StarFilled />,
-        label: 'register',
-      },
+      ...(!accessToken || isAdmin
+        ? [
+            {
+              key: '/login',
+              icon: <StarFilled />,
+              label: 'login',
+            },
+            {
+              key: '/register',
+              icon: <StarFilled />,
+              label: 'register',
+            },
+          ]
+        : []),
       {
         key: '/profile',
         icon: <StarFilled />,
@@ -115,7 +120,7 @@ const App: React.FC = (): JSX.Element => {
         label: 'users',
       },
     ];
-  }, []);
+  }, [accessToken, isAdmin]);
 
   useEffect(() => {
     // console.log('location: ', location);

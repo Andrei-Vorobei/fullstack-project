@@ -3,6 +3,7 @@ import type { JSX } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { useLoginMutation } from '@/app-store/api/auth-api';
+import YandexAuthLink from '@/components/forms/yandex-auth-link';
 import Button from '@/components/UI/button/button';
 import TextInput from '@/components/UI/text-input/text-input';
 
@@ -124,6 +125,7 @@ const LoginForm = (): JSX.Element => {
           {isLoading ? copy.submitting : copy.submit}
         </Button>
       </form>
+      <YandexAuthLink />
     </section>
   );
 };
