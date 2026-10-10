@@ -1,6 +1,5 @@
 import type { JSX } from 'react';
 
-import { GithubOutlined, MailOutlined } from '@ant-design/icons';
 import { Link } from 'react-router';
 
 import styles from './home-page.module.css';
@@ -87,27 +86,6 @@ const HomePage = (): JSX.Element => {
           </ul>
         </aside>
       </section>
-
-      {/* <section className={styles.contact} aria-labelledby="contact-title">
-        <div>
-          <p className={styles.eyebrow}>Контакты</p>
-        </div>
-        <div className={styles.contactLinks}>
-          <a className={styles.contactLink} href="mailto:your.email@example.com">
-            <MailOutlined aria-hidden="true" />
-            your.email@example.com
-          </a>
-          <a
-            className={styles.contactLink}
-            href="https://github.com/your-username"
-            target="_blank"
-            rel="noreferrer"
-          >
-            <GithubOutlined aria-hidden="true" />
-            github.com/your-username
-          </a>
-        </div>
-      </section> */}
     </div>
   );
 };
