@@ -1,5 +1,6 @@
 ﻿import type { JSX } from 'react';
 
+import { CloseOutlined } from '@ant-design/icons';
 import { AutoComplete, Button, Checkbox, Flex, Pagination, Spin, type PaginationProps } from 'antd';
 import { useEffect, useMemo } from 'react';
 import { useOutletContext, useSearchParams } from 'react-router';
@@ -118,7 +119,7 @@ const ProductsPage = (): JSX.Element => {
           onChange={(event) => updateFilter('search', event.target.value)}
         />
         <AutoComplete
-          allowClear
+          allowClear={{ clearIcon: <CloseOutlined /> }}
           className={styles.categoryAutocomplete}
           placeholder="Категория"
           value={category}

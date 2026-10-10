@@ -1,13 +1,20 @@
 import type { JSX } from 'react';
 
-import { HomeFilled, ProductFilled, ShoppingCartOutlined, StarFilled } from '@ant-design/icons';
-import { FloatButton, Layout, Menu, Modal, theme } from 'antd';
+import {
+  HomeFilled,
+  LogoutOutlined,
+  ProductFilled,
+  ShoppingCartOutlined,
+  StarFilled,
+  UserOutlined,
+} from '@ant-design/icons';
+import { Dropdown, FloatButton, Layout, Menu, Modal, message, theme } from 'antd';
 import { Suspense, useEffect, useMemo } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 
 import type { Product } from '@/app-store/api/products-api';
 
-import { useGetMeQuery, useRefreshQuery } from '@/app-store/api/auth-api';
+import { useGetMeQuery, useLogoutMutation, useRefreshQuery } from '@/app-store/api/auth-api';
 import {
   useClearCartMutation,
   useAddCartItemMutation,
@@ -27,12 +34,25 @@ import { getProfile } from '@/app-store/reducers/user-slice';
 import Cart from '@/components/cart';
 import { useAppDispatch, useAppSelector } from '@/hooks';
 
+import styles from './App.module.css';
+
 const { Header, Content, Footer, Sider } = Layout;
+
+const pageTitles: Record<string, string> = {
+  '/': 'Home',
+  '/products': 'Products',
+  '/login': 'Login',
+  '/register': 'Register',
+  '/profile': 'Profile',
+  '/users': 'Users',
+};
 
 const App: React.FC = (): JSX.Element => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const location = useLocation();
+  const [logout] = useLogoutMutation();
+  const [messageApi, messageContextHolder] = message.useMessage();
 
   const isOpenCartModal = useAppSelector(getIsOpenCartModal);
 
@@ -47,6 +67,7 @@ const App: React.FC = (): JSX.Element => {
   const guestMigrationId = useAppSelector((state) => state.cart.guestMigrationId);
   const guestMigrationStatus = useAppSelector((state) => state.cart.guestMigrationStatus);
   const profile = useAppSelector(getProfile);
+  const pageTitle = pageTitles[location.pathname] ?? 'Not found';
 
   useEffect(() => {
     if (
@@ -140,6 +161,15 @@ const App: React.FC = (): JSX.Element => {
     }
   };
 
+  const handleLogout = async (): Promise<void> => {
+    try {
+      await logout().unwrap();
+      await navigate('/login');
+    } catch {
+      await messageApi.error('Не удалось выйти из аккаунта. Попробуйте ещё раз.');
+    }
+  };
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider breakpoint="lg" collapsedWidth="0">
@@ -154,7 +184,38 @@ const App: React.FC = (): JSX.Element => {
         />
       </Sider>
       <Layout>
-        <Header style={{ padding: 0, background: colorBgContainer }} />
+        {messageContextHolder}
+        <Header className={styles.header} style={{ background: colorBgContainer }}>
+          <div className={styles.headerContent}>
+            <h1 className={styles.pageTitle}>{pageTitle}</h1>
+            {profile ? (
+              <Dropdown
+                trigger={['click']}
+                menu={{
+                  items: [
+                    { key: 'profile', icon: <UserOutlined />, label: 'Профиль' },
+                    { key: 'logout', icon: <LogoutOutlined />, label: 'Выход' },
+                  ],
+                  onClick: ({ key }) => {
+                    if (key === 'profile') {
+                      void navigate('/profile');
+                    } else if (key === 'logout') {
+                      void handleLogout();
+                    }
+                  },
+                }}
+              >
+                <button className={styles.profileButton} type="button" aria-haspopup="menu">
+                  {profile.username}
+                </button>
+              </Dropdown>
+            ) : (
+              <button className={styles.loginButton} type="button" onClick={() => void navigate('/login')}>
+                Войти
+              </button>
+            )}
+          </div>
+        </Header>
         <Content style={{ margin: '24px 16px 0' }}>
           <Suspense fallback={<div role="status">Загрузка страницы...</div>}>
             <Outlet context={{ onAddToCart: handleAddToCart }} />

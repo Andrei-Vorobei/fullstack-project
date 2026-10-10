@@ -66,6 +66,7 @@
   background: transparent;
   color: #6b7280;
   cursor: pointer;
+  font-size: 14px;
   transform: translateY(-50%);
 }
 

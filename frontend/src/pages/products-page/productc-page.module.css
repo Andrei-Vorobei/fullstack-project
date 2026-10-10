@@ -10,6 +10,22 @@
   height: 42px;
 }
 
+.categoryAutocomplete :global(.ant-select-clear) {
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  color: #6b7280;
+  font-size: 14px;
+  opacity: 1;
+}
+
+.categoryAutocomplete :global(.ant-select-clear .anticon),
+.categoryAutocomplete :global(.ant-select-clear .anticon svg) {
+  width: 14px;
+  height: 14px;
+  font-size: 14px;
+}
+
 .categoryAutocomplete :global(.ant-select-selector) {
   height: 42px !important;
   padding: 0 12px !important;
