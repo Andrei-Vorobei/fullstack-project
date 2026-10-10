@@ -48,10 +48,42 @@ const HomePage = (): JSX.Element => {
             Технологии
           </h2>
           <ul className={styles.stackList}>
-            <li>React · TypeScript</li>
-            <li>Redux Toolkit · RTK Query</li>
-            <li>Node.js · NestJS</li>
-            <li>PostgreSQL · TypeORM</li>
+            <li>
+              <a href="https://react.dev" target="_blank" rel="noreferrer">
+                React
+              </a>{' '}
+              ·{' '}
+              <a href="https://www.typescriptlang.org" target="_blank" rel="noreferrer">
+                TypeScript
+              </a>
+            </li>
+            <li>
+              <a href="https://redux-toolkit.js.org" target="_blank" rel="noreferrer">
+                Redux Toolkit
+              </a>{' '}
+              ·{' '}
+              <a href="https://redux-toolkit.js.org/rtk-query/overview" target="_blank" rel="noreferrer">
+                RTK Query
+              </a>
+            </li>
+            <li>
+              <a href="https://nodejs.org" target="_blank" rel="noreferrer">
+                Node.js
+              </a>{' '}
+              ·{' '}
+              <a href="https://nestjs.com" target="_blank" rel="noreferrer">
+                NestJS
+              </a>
+            </li>
+            <li>
+              <a href="https://www.postgresql.org" target="_blank" rel="noreferrer">
+                PostgreSQL
+              </a>{' '}
+              ·{' '}
+              <a href="https://typeorm.io" target="_blank" rel="noreferrer">
+                TypeORM
+              </a>
+            </li>
           </ul>
         </aside>
       </section>

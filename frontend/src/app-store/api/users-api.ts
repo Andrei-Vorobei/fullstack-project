@@ -6,7 +6,7 @@ import { axiosBaseQuery } from './auth-api';
 
 export type UsersListItem = Pick<
   UserProfile,
-  'id' | 'username' | 'roles' | 'about' | 'avatar' | 'createdAt' | 'updatedAt'
+  'id' | 'username' | 'roles' | 'about' | 'avatar' | 'telegramUsername' | 'createdAt' | 'updatedAt'
 > &
   Partial<Pick<UserProfile, 'email'>>;
 
@@ -24,7 +24,25 @@ export const usersApi = createApi({
       }),
       providesTags: ['Users'],
     }),
+    setModeratorRole: builder.mutation<
+      { id: string; roles: UserProfile['roles'] },
+      { id: string; enabled: boolean }
+    >({
+      query: ({ id, enabled }) => ({
+        url: `/users/${id}/moderator`,
+        method: 'PATCH',
+        data: { enabled },
+      }),
+      invalidatesTags: ['Users'],
+    }),
+    deleteUser: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/users/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Users'],
+    }),
   }),
 });
 
-export const { useGetUsersQuery } = usersApi;
+export const { useDeleteUserMutation, useGetUsersQuery, useSetModeratorRoleMutation } = usersApi;

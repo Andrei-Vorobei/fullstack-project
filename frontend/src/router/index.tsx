@@ -10,6 +10,7 @@ const ProductsPage = lazy(() => import('@/pages/products-page'));
 const ProfilePage = lazy(() => import('@/pages/profile-page'));
 const RegisterPage = lazy(() => import('@/pages/register-page'));
 const UsersPage = lazy(() => import('@/pages/users-page'));
+const UserCartPage = lazy(() => import('@/pages/user-cart-page'));
 
 export const AppRouter = (): JSX.Element => {
   return (
@@ -21,6 +22,7 @@ export const AppRouter = (): JSX.Element => {
         <Route path="register" element={<RegisterPage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="users" element={<UsersPage />} />
+        <Route path="users/:userId/cart" element={<UserCartPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

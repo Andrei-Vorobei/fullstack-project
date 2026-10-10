@@ -8,14 +8,20 @@ describe('ProductsController', () => {
   let controller: ProductsController;
   let productsService: Pick<
     ProductsService,
-    'getProductsAll' | 'createProduct' | 'importFromJson'
+    | 'getProductsAll'
+    | 'getFilteredProducts'
+    | 'createProduct'
+    | 'importFromJson'
+    | 'updateProduct'
   >;
 
   beforeEach(async () => {
     productsService = {
       getProductsAll: vi.fn(),
+      getFilteredProducts: vi.fn(),
       createProduct: vi.fn(),
       importFromJson: vi.fn(),
+      updateProduct: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -36,12 +42,67 @@ describe('ProductsController', () => {
     expect(productsService.getProductsAll).toHaveBeenCalledWith(5, 10);
   });
 
-  it('creates a product through the service', async () => {
-    const product = { title: 'Laptop', price: 1000 };
+  it('passes filters and pagination to the filtered products service', async () => {
+    await controller.getFilteredProducts(
+      'beauty',
+      'BrandX',
+      'palette',
+      '10',
+      '50',
+      'true',
+      20,
+      10,
+    );
 
-    await controller.createProduct(product);
+    expect(productsService.getFilteredProducts).toHaveBeenCalledWith(
+      {
+        category: 'beauty',
+        brand: 'BrandX',
+        search: 'palette',
+        minPrice: 10,
+        maxPrice: 50,
+        inStock: true,
+      },
+      20,
+      10,
+    );
+  });
+
+  it('creates a product for an admin', async () => {
+    const product = {
+      title: 'Laptop',
+      description: 'Gaming laptop',
+      category: 'electronics',
+      brand: 'BrandX',
+      price: 1000,
+      stock: 5,
+      images: ['https://example.com/laptop.webp'],
+    };
+
+    await controller.createProduct(product, {
+      user: { roles: [UserRole.ADMIN] },
+    });
 
     expect(productsService.createProduct).toHaveBeenCalledWith(product);
+  });
+
+  it('rejects product creation for non-admin users', async () => {
+    expect(() =>
+      controller.createProduct(
+        {
+          title: 'Laptop',
+          description: 'Gaming laptop',
+          category: 'electronics',
+          brand: 'BrandX',
+          price: 1000,
+          stock: 5,
+          images: ['https://example.com/laptop.webp'],
+        },
+        { user: { roles: [UserRole.USER] } },
+      ),
+    ).toThrow(ForbiddenException);
+
+    expect(productsService.createProduct).not.toHaveBeenCalled();
   });
 
   it('imports products for an admin', async () => {
@@ -81,5 +142,30 @@ describe('ProductsController', () => {
     ).rejects.toThrow(ForbiddenException);
 
     expect(productsService.importFromJson).not.toHaveBeenCalled();
+  });
+
+  it('updates a product for an admin', async () => {
+    const updates = { title: 'Updated product' };
+    await controller.updateProduct('product-id', updates, {
+      user: { roles: [UserRole.ADMIN] },
+    });
+
+    expect(productsService.updateProduct).toHaveBeenCalledWith(
+      'product-id',
+      updates,
+    );
+  });
+
+  it('rejects product updates for non-admin users', async () => {
+    expect(() =>
+      controller.updateProduct(
+        'product-id',
+        { title: 'Updated product' },
+        {
+          user: { roles: [UserRole.USER] },
+        },
+      ),
+    ).toThrow(ForbiddenException);
+    expect(productsService.updateProduct).not.toHaveBeenCalled();
   });
 });

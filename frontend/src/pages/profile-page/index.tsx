@@ -17,12 +17,14 @@ import styles from './profile-page.module.css';
 const roleLabels: Record<UserRole, string> = {
   user: '\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C',
   admin: '\u0410\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440',
+  moderator: '\u041C\u043E\u0434\u0435\u0440\u0430\u0442\u043E\u0440',
 };
 
 type ProfileFormValues = {
   username: string;
   about: string;
   avatar: string;
+  telegramUsername: string;
   password: string;
   confirmPassword: string;
 };
@@ -52,6 +54,7 @@ const ProfilePage = (): JSX.Element => {
         username: profile.username,
         about: profile.about,
         avatar: profile.avatar,
+        telegramUsername: profile.telegramUsername ?? '',
       });
     }
   }, [profile, reset]);
@@ -178,6 +181,25 @@ const ProfilePage = (): JSX.Element => {
                 </div>
                 <div className={styles.field}>
                   <TextInput
+                    label="Имя пользователя в Telegram"
+                    name="telegramUsername"
+                    placeholder="@username"
+                    register={register}
+                    rules={{
+                      validate: (value) =>
+                        !value ||
+                        /^@?[A-Za-z0-9_]{5,32}$/.test(value.trim()) ||
+                        'Укажите Telegram username длиной от 5 до 32 символов',
+                    }}
+                    aria-invalid={Boolean(errors.telegramUsername)}
+                  />
+                  <p className={styles.fieldHint}>Необязательно. Можно указать с символом @ или без него.</p>
+                  {errors.telegramUsername ? (
+                    <p className={styles.error}>{errors.telegramUsername.message}</p>
+                  ) : null}
+                </div>
+                <div className={styles.field}>
+                  <TextInput
                     label="Новый пароль (необязательно)"
                     name="password"
                     type="password"
@@ -245,6 +267,18 @@ const ProfilePage = (): JSX.Element => {
                     <dd>{profile.email}</dd>
                   </div>
                   <div className={styles.field}>
+                    <dt>Telegram</dt>
+                    <dd>
+                      {profile.telegramUsername ? (
+                        <a href={`https://t.me/${profile.telegramUsername}`} target="_blank" rel="noreferrer">
+                          @{profile.telegramUsername}
+                        </a>
+                      ) : (
+                        'Не указан'
+                      )}
+                    </dd>
+                  </div>
+                  <div className={styles.field}>
                     <dt>{'\u0420\u043E\u043B\u0438'}</dt>
                     <dd>
                       <ul className={styles.roles}>
@@ -273,6 +307,7 @@ const ProfilePage = (): JSX.Element => {
                         username: profile.username,
                         about: profile.about,
                         avatar: profile.avatar,
+                        telegramUsername: profile.telegramUsername ?? '',
                       });
                       setIsEditing(true);
                     }}

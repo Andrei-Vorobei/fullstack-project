@@ -70,6 +70,10 @@ export class UsersService {
   async updateUser(id: string, dto: UpdateUserDto): Promise<UpdateResult> {
     const updateData: UpdateUserDto = { ...dto };
 
+    if (updateData.telegramUsername !== undefined) {
+      updateData.telegramUsername = updateData.telegramUsername?.trim().replace(/^@/, '') || null;
+    }
+
     // Пароль из PATCH /users/me никогда не должен попасть в БД открытым текстом.
     if (updateData.password) {
       updateData.password = await bcrypt.hash(updateData.password, 10);
@@ -91,6 +95,20 @@ export class UsersService {
 
       throw error;
     }
+  }
+
+  async setModeratorRole(id: string, enabled: boolean): Promise<User | null> {
+    const user = await this.findUserById(id);
+    if (!user) return null;
+
+    const hasModeratorRole = user.roles.includes(UserRole.MODERATOR);
+    if (enabled === hasModeratorRole) return user;
+
+    user.roles = enabled
+      ? [...user.roles, UserRole.MODERATOR]
+      : user.roles.filter((role) => role !== UserRole.MODERATOR);
+
+    return this.userRepository.save(user);
   }
 
   async removeUser(id: string): Promise<DeleteResult> {

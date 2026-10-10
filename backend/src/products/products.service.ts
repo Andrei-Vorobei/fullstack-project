@@ -1,13 +1,22 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { readFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { Repository } from 'typeorm';
 import { Category } from './entities/category.entity.js';
 import { Product } from './entities/products.entity.js';
+import { UpdateProductDto } from './dto/update-product.dto.js';
+import { CreateProductDto } from './dto/create-product.dto.js';
+import type { CurrencyCode } from '../currencies/entities/currency.entity.js';
 
-type ProductFromJson = Omit<Product, 'id' | 'externalId'> & {
+type ProductFromJson = Omit<Product, 'id' | 'externalId' | 'currencyCode'> & {
   id: number;
+  currencyCode?: CurrencyCode;
 };
 
 export interface ProductsPage {
@@ -48,8 +57,7 @@ export class ProductsService {
     if (
       !Number.isSafeInteger(skip) ||
       skip < 0 ||
-      (limit !== undefined &&
-        (!Number.isSafeInteger(limit) || limit < 1))
+      (limit !== undefined && (!Number.isSafeInteger(limit) || limit < 1))
     ) {
       throw new BadRequestException(
         'skip must be a non-negative integer and limit must be a positive integer',
@@ -70,12 +78,95 @@ export class ProductsService {
     };
   }
 
-  async createProduct(product: Partial<Product>): Promise<Product> {
-    const newProduct = this.productsRepository.create(product);
+  async createProduct(input: CreateProductDto): Promise<Product> {
+    const now = new Date().toISOString();
+    const sku = input.sku?.trim() || `CUSTOM-${randomUUID()}`;
+    const category = input.category.trim();
+    const meta = input.meta;
+
+    await this.categoriesRepository.upsert(
+      { slug: category.toLowerCase(), name: category },
+      ['slug'],
+    );
+
+    const newProduct = this.productsRepository.create({
+      externalId: null,
+      title: input.title.trim(),
+      description: input.description.trim(),
+      category,
+      brand: input.brand.trim(),
+      price: input.price,
+      currencyCode: input.currencyCode ?? 'USD',
+      stock: input.stock,
+      discountPercentage: input.discountPercentage ?? 0,
+      rating: input.rating ?? 0,
+      tags: input.tags ?? [],
+      sku,
+      weight: input.weight ?? 0,
+      dimensions: input.dimensions ?? { width: 0, height: 0, depth: 0 },
+      warrantyInformation: input.warrantyInformation ?? 'Не указана',
+      shippingInformation: input.shippingInformation ?? 'Не указана',
+      availabilityStatus:
+        input.availabilityStatus ??
+        (input.stock > 0 ? 'In Stock' : 'Out of Stock'),
+      reviews: input.reviews ?? [],
+      returnPolicy: input.returnPolicy ?? 'Не указана',
+      minimumOrderQuantity: input.minimumOrderQuantity ?? 1,
+      meta: {
+        createdAt: meta?.createdAt ?? now,
+        updatedAt: meta?.updatedAt ?? now,
+        barcode: meta?.barcode ?? sku,
+        qrCode: meta?.qrCode ?? '',
+      },
+      images: input.images,
+      thumbnail: input.thumbnail ?? input.images[0],
+    });
     return this.productsRepository.save(newProduct);
   }
 
-  async getFilteredProducts(filters: ProductFilters): Promise<Product[]> {
+  async updateProduct(id: string, updates: UpdateProductDto): Promise<Product> {
+    const product = await this.productsRepository.findOneBy({ id });
+    if (!product) {
+      throw new NotFoundException('Товар не найден');
+    }
+
+    const availabilityStatus = product.availabilityStatus;
+    Object.assign(product, updates);
+
+    if (updates.images?.length) {
+      product.thumbnail = updates.images[0];
+    }
+    if (updates.stock !== undefined) {
+      product.availabilityStatus =
+        updates.stock === 0
+          ? 'Out of Stock'
+          : availabilityStatus === 'Out of Stock'
+            ? 'In Stock'
+            : availabilityStatus;
+    }
+    product.meta = {
+      ...product.meta,
+      updatedAt: new Date().toISOString(),
+    };
+
+    return this.productsRepository.save(product);
+  }
+
+  async getFilteredProducts(
+    filters: ProductFilters,
+    skip = 0,
+    limit?: number,
+  ): Promise<ProductsPage> {
+    if (
+      !Number.isSafeInteger(skip) ||
+      skip < 0 ||
+      (limit !== undefined && (!Number.isSafeInteger(limit) || limit < 1))
+    ) {
+      throw new BadRequestException(
+        'skip must be a non-negative integer and limit must be a positive integer',
+      );
+    }
+
     const { category, brand, search, minPrice, maxPrice, inStock } = filters;
 
     const query = this.productsRepository
@@ -83,7 +174,9 @@ export class ProductsService {
       .where('1 = 1');
 
     if (category) {
-      query.andWhere('LOWER(product.category) = LOWER(:category)', { category });
+      query.andWhere('LOWER(product.category) = LOWER(:category)', {
+        category,
+      });
     }
 
     if (brand) {
@@ -98,8 +191,10 @@ export class ProductsService {
       query.andWhere('product.price <= :maxPrice', { maxPrice });
     }
 
-    if (typeof inStock === 'boolean') {
-      query.andWhere('product.stock > 0 = :inStock', { inStock });
+    if (inStock === true) {
+      query.andWhere('product.stock > 0');
+    } else if (inStock === false) {
+      query.andWhere('product.stock <= 0');
     }
 
     if (search) {
@@ -110,14 +205,29 @@ export class ProductsService {
       );
     }
 
-    return query.orderBy('product.externalId', 'ASC').getMany();
+    query.orderBy('product.externalId', 'ASC').skip(skip);
+    if (limit !== undefined) {
+      query.take(limit);
+    }
+
+    const [products, total] = await query.getManyAndCount();
+
+    return {
+      products,
+      total,
+      skip,
+      limit: limit ?? total,
+    };
   }
 
   async importFromJson(): Promise<{ fileFound: boolean; imported: number }> {
     let file: string;
 
     try {
-      file = await readFile(resolve(process.cwd(), 'import-products.json'), 'utf8');
+      file = await readFile(
+        resolve(process.cwd(), 'import-products.json'),
+        'utf8',
+      );
     } catch (error) {
       if (
         error instanceof Error &&
@@ -134,6 +244,7 @@ export class ProductsService {
 
     const products = data.products.map(({ id, ...product }) => ({
       ...product,
+      currencyCode: product.currencyCode ?? 'USD',
       externalId: id,
     }));
 

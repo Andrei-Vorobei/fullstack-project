@@ -1,5 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { CartItem } from '../../cart/entities/cart-item.entity.js';
+import type { CurrencyCode } from '../../currencies/entities/currency.entity.js';
 
 export interface ProductDimensions {
   width: number;
@@ -41,6 +42,9 @@ export class Product {
 
   @Column({ type: 'double precision' })
   price: number;
+
+  @Column({ type: 'varchar', length: 3, default: 'USD' })
+  currencyCode: CurrencyCode;
 
   @Column({ type: 'double precision' })
   discountPercentage: number;

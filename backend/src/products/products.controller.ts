@@ -4,6 +4,9 @@ import {
   DefaultValuePipe,
   ForbiddenException,
   Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
   ParseIntPipe,
   Post,
   Query,
@@ -11,9 +14,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtGuard } from '#src/auth/jwt.guard.js';
-import { Product } from './entities/products.entity.js';
 import { ProductsService } from './products.service.js';
 import { UserRole } from '#src/users/entities/user-role.enum.js';
+import { UpdateProductDto } from './dto/update-product.dto.js';
+import { CreateProductDto } from './dto/create-product.dto.js';
 
 type AuthenticatedRequest = {
   user: {
@@ -46,20 +50,48 @@ export class ProductsController {
     @Query('minPrice') minPrice?: string,
     @Query('maxPrice') maxPrice?: string,
     @Query('inStock') inStock?: string,
+    @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip = 0,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
-    return this.productsService.getFilteredProducts({
-      category,
-      brand,
-      search,
-      minPrice: minPrice === undefined ? undefined : Number(minPrice),
-      maxPrice: maxPrice === undefined ? undefined : Number(maxPrice),
-      inStock: inStock === undefined ? undefined : inStock === 'true',
-    });
+    return this.productsService.getFilteredProducts(
+      {
+        category,
+        brand,
+        search,
+        minPrice: minPrice === undefined ? undefined : Number(minPrice),
+        maxPrice: maxPrice === undefined ? undefined : Number(maxPrice),
+        inStock: inStock === undefined ? undefined : inStock === 'true',
+      },
+      skip,
+      limit,
+    );
   }
 
+  @UseGuards(JwtGuard)
   @Post()
-  createProduct(@Body() product: Partial<Product>) {
+  createProduct(
+    @Body() product: CreateProductDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    if (!req.user.roles.includes(UserRole.ADMIN)) {
+      throw new ForbiddenException('Требуется роль администратора');
+    }
+
     return this.productsService.createProduct(product);
+  }
+
+  @UseGuards(JwtGuard)
+  @Patch(':id')
+  updateProduct(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updates: UpdateProductDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    if (!req.user.roles.includes(UserRole.ADMIN)) {
+      throw new ForbiddenException('Требуется роль администратора');
+    }
+
+    return this.productsService.updateProduct(id, updates);
   }
 
   @UseGuards(JwtGuard)

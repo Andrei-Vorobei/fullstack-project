@@ -20,6 +20,11 @@ import { InitialSchema1791570000000 } from './migrations/1791570000000-initial-s
 import { Category } from './products/entities/category.entity.js';
 import { CreateCategories1791633600000 } from './migrations/1791633600000-create-categories.js';
 import { CreateGuestCartMigrations1791700000000 } from './migrations/1791700000000-create-guest-cart-migrations.js';
+import { AddModeratorUserRole1791710000000 } from './migrations/1791710000000-add-moderator-user-role.js';
+import { AddTelegramUsername1791720000000 } from './migrations/1791720000000-add-telegram-username.js';
+import { Currency } from './currencies/entities/currency.entity.js';
+import { CurrenciesModule } from './currencies/currencies.module.js';
+import { AddProductCurrencies1791730000000 } from './migrations/1791730000000-add-product-currencies.js';
 
 @Module({
   imports: [
@@ -67,11 +72,15 @@ import { CreateGuestCartMigrations1791700000000 } from './migrations/17917000000
             CartItem,
             Category,
             GuestCartMigration,
+            Currency,
           ],
           migrations: [
             InitialSchema1791570000000,
             CreateCategories1791633600000,
             CreateGuestCartMigrations1791700000000,
+            AddModeratorUserRole1791710000000,
+            AddTelegramUsername1791720000000,
+            AddProductCurrencies1791730000000,
           ],
           migrationsRun: true,
           installExtensions: false,
@@ -83,6 +92,7 @@ import { CreateGuestCartMigrations1791700000000 } from './migrations/17917000000
     UsersModule,
     AuthModule,
     ProductsModule,
+    CurrenciesModule,
     CartModule,
   ],
   controllers: [AppController],

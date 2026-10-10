@@ -3,10 +3,12 @@ import {
   IsEmail,
   IsString,
   IsUrl,
+  Matches,
   MaxLength,
   MinLength,
   ValidateIf,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateUserDto {
   @IsString({ message: 'Имя пользователя должно быть строкой' })
@@ -26,6 +28,16 @@ export class CreateUserDto {
   )
   @MaxLength(500, { message: 'URL аватара не должен превышать 500 символов' })
   avatar?: string;
+
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().replace(/^@/, '') : value,
+  )
+  @ValidateIf((_object, value) => value !== undefined && value !== null && value !== '')
+  @IsString({ message: 'Telegram username должен быть строкой' })
+  @Matches(/^[A-Za-z0-9_]{5,32}$/, {
+    message: 'Укажите корректный Telegram username (от 5 до 32 символов)',
+  })
+  telegramUsername?: string | null;
 
   @IsEmail({}, { message: 'Укажите корректный адрес электронной почты' })
   @MaxLength(255, { message: 'Email не должен превышать 255 символов' })

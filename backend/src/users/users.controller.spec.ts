@@ -16,6 +16,7 @@ describe('UsersController', () => {
     findUserById: ReturnType<typeof vi.fn>;
     findAllUsers: ReturnType<typeof vi.fn>;
     updateUser: ReturnType<typeof vi.fn>;
+    setModeratorRole: ReturnType<typeof vi.fn>;
     removeUser: ReturnType<typeof vi.fn>;
   };
 
@@ -25,6 +26,7 @@ describe('UsersController', () => {
       findUserById: vi.fn(),
       findAllUsers: vi.fn(),
       updateUser: vi.fn(),
+      setModeratorRole: vi.fn(),
       removeUser: vi.fn(),
     };
 
@@ -52,6 +54,7 @@ describe('UsersController', () => {
           roles: [UserRole.USER],
           about: 'About Alice',
           avatar: 'https://example.com/avatar.png',
+          telegramUsername: 'alice_tg',
           createdAt: new Date('2026-01-01T00:00:00.000Z'),
           updatedAt: new Date('2026-01-02T00:00:00.000Z'),
         },
@@ -70,6 +73,7 @@ describe('UsersController', () => {
           roles: [UserRole.USER],
           about: 'About Alice',
           avatar: 'https://example.com/avatar.png',
+          telegramUsername: 'alice_tg',
           createdAt: new Date('2026-01-01T00:00:00.000Z'),
           updatedAt: new Date('2026-01-02T00:00:00.000Z'),
         },
@@ -87,6 +91,7 @@ describe('UsersController', () => {
         roles: [UserRole.USER],
         about: 'About Alice',
         avatar: 'https://example.com/avatar.png',
+        telegramUsername: 'alice_tg',
         createdAt: new Date('2026-01-01T00:00:00.000Z'),
         updatedAt: new Date('2026-01-02T00:00:00.000Z'),
       };
@@ -106,6 +111,7 @@ describe('UsersController', () => {
           roles: user.roles,
           about: user.about,
           avatar: user.avatar,
+          telegramUsername: user.telegramUsername,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
         },
@@ -129,6 +135,7 @@ describe('UsersController', () => {
         email: 'alice@example.com',
         password: 'hashed-password',
         yandexId: null,
+        telegramUsername: 'alice_tg',
       };
       usersService.findUserById
         .mockResolvedValueOnce(user)
@@ -137,17 +144,23 @@ describe('UsersController', () => {
 
       await expect(
         controller.updateMe(
-          { username: 'alice-new', about: 'Updated profile' } as UpdateUserDto,
+          {
+            username: 'alice-new',
+            about: 'Updated profile',
+            telegramUsername: 'alice_tg',
+          } as UpdateUserDto,
           request,
         ),
       ).resolves.toEqual({
         id: userId,
         username: 'alice-new',
         email: 'alice@example.com',
+        telegramUsername: 'alice_tg',
       });
       expect(usersService.updateUser).toHaveBeenCalledWith(userId, {
         username: 'alice-new',
         about: 'Updated profile',
+        telegramUsername: 'alice_tg',
       });
     });
 
@@ -264,6 +277,60 @@ describe('UsersController', () => {
       await expect(controller.deleteMe(userId, request)).rejects.toThrow(
         NotFoundException,
       );
+    });
+
+    describe('setModeratorRole', () => {
+      const adminId = 'ad27d56a-70c3-4ae4-bc6d-3b9da7b98b49';
+      const targetId = 'b35796f4-6916-4dc6-af19-af2a469609d5';
+      const adminRequest = {
+        user: { id: adminId, username: 'admin', roles: [UserRole.ADMIN] },
+      } as Request & {
+        user: { id: string; username: string; roles: UserRole[] };
+      };
+
+      it('adds the moderator role and returns the updated role list', async () => {
+        usersService.setModeratorRole.mockResolvedValue({
+          id: targetId,
+          roles: [UserRole.USER, UserRole.MODERATOR],
+          password: 'hashed-password',
+        });
+
+        await expect(
+          controller.setModeratorRole(targetId, { enabled: true }, adminRequest),
+        ).resolves.toEqual({
+          id: targetId,
+          roles: [UserRole.USER, UserRole.MODERATOR],
+        });
+        expect(usersService.setModeratorRole).toHaveBeenCalledWith(targetId, true);
+      });
+
+      it('rejects non-admin users', async () => {
+        const regularUserRequest = {
+          user: { id: adminId, username: 'user', roles: [UserRole.USER] },
+        } as Request & {
+          user: { id: string; username: string; roles: UserRole[] };
+        };
+
+        await expect(
+          controller.setModeratorRole(targetId, { enabled: true }, regularUserRequest),
+        ).rejects.toThrow(ForbiddenException);
+        expect(usersService.setModeratorRole).not.toHaveBeenCalled();
+      });
+
+      it('does not allow admins to change their own moderator role', async () => {
+        await expect(
+          controller.setModeratorRole(adminId, { enabled: true }, adminRequest),
+        ).rejects.toThrow(ForbiddenException);
+        expect(usersService.setModeratorRole).not.toHaveBeenCalled();
+      });
+
+      it('returns not found when the target user does not exist', async () => {
+        usersService.setModeratorRole.mockResolvedValue(null);
+
+        await expect(
+          controller.setModeratorRole(targetId, { enabled: false }, adminRequest),
+        ).rejects.toThrow(NotFoundException);
+      });
     });
   });
 });

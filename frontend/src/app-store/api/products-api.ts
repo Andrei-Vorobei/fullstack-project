@@ -1,5 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 
+import type { Currency, CurrencyCode } from '@/utils/currency';
+
 import { axiosBaseQuery } from './auth-api';
 
 export type ProductReview = {
@@ -29,6 +31,7 @@ export type Product = {
   description: string;
   category: string;
   price: number;
+  currencyCode: CurrencyCode;
   discountPercentage: number;
   rating: number;
   stock: number;
@@ -64,7 +67,22 @@ export type ProductFilters = {
   inStock?: boolean;
 };
 
+export type FilteredProductsQuery = ProductFilters & {
+  limit?: number;
+  skip?: number;
+};
+
 export type ProductCategory = string;
+
+export type CreateProductRequest = Pick<
+  Product,
+  'title' | 'description' | 'category' | 'brand' | 'price' | 'stock' | 'images'
+> &
+  Partial<Omit<Product, 'id' | 'title' | 'description' | 'category' | 'brand' | 'price' | 'stock' | 'images'>> & {
+    id?: string;
+    externalId?: number | null;
+    currencyCode?: CurrencyCode;
+  };
 
 export const productsApi = createApi({
   reducerPath: 'productsApi',
@@ -73,8 +91,12 @@ export const productsApi = createApi({
   }),
   tagTypes: ['Product'],
   endpoints: (builder) => ({
+    getCurrencies: builder.query<Currency[], void>({
+      query: () => ({ url: '/currencies' }),
+    }),
     getCategories: builder.query<ProductCategory[], void>({
       query: () => ({ url: '/products/categories' }),
+      providesTags: ['Product'],
     }),
     getProducts: builder.query<ProductsResponse, { limit?: number; skip?: number }>({
       query: ({ limit, skip }) => ({
@@ -84,10 +106,12 @@ export const productsApi = createApi({
       providesTags: ['Product'],
     }),
 
-    getFilteredProducts: builder.query<Product[], ProductFilters>({
-      query: (filters) => ({
+    getFilteredProducts: builder.query<ProductsResponse, FilteredProductsQuery>({
+      query: ({ limit, skip, ...filters }) => ({
         url: '/products/filter',
         params: {
+          ...(limit !== undefined ? { limit } : {}),
+          ...(skip !== undefined ? { skip } : {}),
           ...(filters.category ? { category: filters.category } : {}),
           ...(filters.brand ? { brand: filters.brand } : {}),
           ...(filters.search ? { search: filters.search } : {}),
@@ -111,13 +135,32 @@ export const productsApi = createApi({
       }),
       invalidatesTags: ['Product'],
     }),
+    updateProduct: builder.mutation<Product, { id: string; updates: Partial<Product> }>({
+      query: ({ id, updates }) => ({
+        url: `/products/${id}`,
+        method: 'PATCH',
+        data: updates,
+      }),
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'Product', id }, 'Product'],
+    }),
+    createProduct: builder.mutation<Product, CreateProductRequest>({
+      query: (product) => ({
+        url: '/products',
+        method: 'POST',
+        data: product,
+      }),
+      invalidatesTags: ['Product'],
+    }),
   }),
 });
 
 export const {
+  useGetCurrenciesQuery,
   useGetCategoriesQuery,
   useGetProductsQuery,
   useGetFilteredProductsQuery,
   useGetProductByIdQuery,
   useImportProductsMutation,
+  useUpdateProductMutation,
+  useCreateProductMutation,
 } = productsApi;

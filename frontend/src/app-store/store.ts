@@ -1,4 +1,4 @@
-import { configureStore, type Middleware } from '@reduxjs/toolkit';
+import { configureStore, createListenerMiddleware, type Middleware } from '@reduxjs/toolkit';
 
 import { authApi } from './api/auth-api';
 import { cartApi } from './api/cart-api';
@@ -6,6 +6,15 @@ import { productsApi } from './api/products-api';
 import { usersApi } from './api/users-api';
 import { saveGuestCart } from './cart-storage';
 import { rootReducer } from './root-reducer';
+
+const listenerMiddleware = createListenerMiddleware();
+
+listenerMiddleware.startListening({
+  matcher: authApi.endpoints.updateUser.matchFulfilled,
+  effect: (_action, { dispatch }) => {
+    dispatch(usersApi.util.invalidateTags(['Users']));
+  },
+});
 
 const guestCartPersistenceMiddleware: Middleware<object, ReturnType<typeof rootReducer>> =
   ({ getState }) =>
@@ -40,6 +49,7 @@ export const store = configureStore({
       authApi.middleware,
       usersApi.middleware,
       guestCartPersistenceMiddleware,
+      listenerMiddleware.middleware,
     ]),
 });
 

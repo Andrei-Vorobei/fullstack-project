@@ -53,7 +53,9 @@ export type RegisterRequest = {
   password: string;
 };
 
-export type UpdateUserRequest = Partial<Pick<UserProfile, 'username' | 'about' | 'avatar'>> & {
+export type UpdateUserRequest = Partial<
+  Pick<UserProfile, 'username' | 'about' | 'avatar' | 'telegramUsername'>
+> & {
   password?: string;
 };
 

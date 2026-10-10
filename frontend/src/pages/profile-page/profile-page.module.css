@@ -93,6 +93,12 @@
   font-weight: 600;
 }
 
+.fieldHint {
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-size: 12px;
+}
+
 .textarea {
   box-sizing: border-box;
   width: 100%;

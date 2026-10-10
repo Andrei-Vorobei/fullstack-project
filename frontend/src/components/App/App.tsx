@@ -32,6 +32,7 @@ import {
 } from '@/app-store/reducers/cart-slice';
 import { getProfile } from '@/app-store/reducers/user-slice';
 import Cart from '@/components/cart';
+import Button from '@/components/UI/button/button';
 import { useAppDispatch, useAppSelector } from '@/hooks';
 
 import styles from './App.module.css';
@@ -67,7 +68,9 @@ const App: React.FC = (): JSX.Element => {
   const guestMigrationId = useAppSelector((state) => state.cart.guestMigrationId);
   const guestMigrationStatus = useAppSelector((state) => state.cart.guestMigrationStatus);
   const profile = useAppSelector(getProfile);
-  const pageTitle = pageTitles[location.pathname] ?? 'Not found';
+  const pageTitle = /^\/users\/[^/]+\/cart$/.test(location.pathname)
+    ? 'User cart'
+    : (pageTitles[location.pathname] ?? 'Not found');
 
   useEffect(() => {
     if (
@@ -205,14 +208,14 @@ const App: React.FC = (): JSX.Element => {
                   },
                 }}
               >
-                <button className={styles.profileButton} type="button" aria-haspopup="menu">
+                <Button className={styles.profileButton} variant="secondary" type="button" aria-haspopup="menu">
                   {profile.username}
-                </button>
+                </Button>
               </Dropdown>
             ) : (
-              <button className={styles.loginButton} type="button" onClick={() => void navigate('/login')}>
+              <Button variant="secondary" type="button" onClick={() => void navigate('/login')}>
                 Войти
-              </button>
+              </Button>
             )}
           </div>
         </Header>

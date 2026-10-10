@@ -1,5 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 
+import type { CurrencyCode } from '@/utils/currency';
+
 import { axiosBaseQuery } from './auth-api';
 
 export type CartItem = {
@@ -9,6 +11,7 @@ export type CartItem = {
     id: string;
     title: string;
     price: number;
+    currencyCode: CurrencyCode;
     discountPercentage: number;
     thumbnail: string;
   };
@@ -46,6 +49,9 @@ export const cartApi = createApi({
     getCart: builder.query<CartResponse, void>({
       query: () => ({ url: '/cart' }),
       providesTags: ['Cart'],
+    }),
+    getUserCart: builder.query<CartResponse, string>({
+      query: (userId) => ({ url: `/cart/users/${userId}` }),
     }),
     addCartItem: builder.mutation<void, AddCartItemRequest>({
       query: (item) => ({
@@ -90,6 +96,7 @@ export const cartApi = createApi({
 
 export const {
   useGetCartQuery,
+  useGetUserCartQuery,
   useAddCartItemMutation,
   useSetCartItemQuantityMutation,
   useRemoveCartItemMutation,

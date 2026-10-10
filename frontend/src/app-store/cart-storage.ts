@@ -23,6 +23,10 @@ const isCartItem = (value: unknown): value is CartItem => {
     typeof value.product.title === 'string' &&
     typeof value.product.price === 'number' &&
     Number.isFinite(value.product.price) &&
+    (value.product.currencyCode === undefined ||
+      value.product.currencyCode === 'USD' ||
+      value.product.currencyCode === 'EUR' ||
+      value.product.currencyCode === 'RUB') &&
     typeof value.product.discountPercentage === 'number' &&
     Number.isFinite(value.product.discountPercentage) &&
     typeof value.product.thumbnail === 'string'
@@ -48,7 +52,18 @@ export const loadGuestCart = (): StoredGuestCart | null => {
     if (!storedCart) return null;
 
     const parsedCart: unknown = JSON.parse(storedCart);
-    if (isStoredGuestCart(parsedCart)) return parsedCart;
+    if (isStoredGuestCart(parsedCart)) {
+      return {
+        ...parsedCart,
+        items: parsedCart.items.map((item) => ({
+          ...item,
+          product: {
+            ...item.product,
+            currencyCode: item.product.currencyCode ?? 'USD',
+          },
+        })),
+      };
+    }
 
     console.error('Stored guest cart has an invalid format.');
   } catch (error) {

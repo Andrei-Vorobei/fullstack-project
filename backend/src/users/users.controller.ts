@@ -8,6 +8,7 @@
   HttpCode,
   HttpStatus,
   NotFoundException,
+  Patch,
   Param,
   ParseUUIDPipe,
   Post,
@@ -19,6 +20,7 @@ import { UsersService } from './users.service.js';
 import { JwtGuard } from '#src/auth/jwt.guard.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { UserRole } from './entities/user-role.enum.js';
+import { SetModeratorRoleDto } from './dto/set-moderator-role.dto.js';
 
 type AuthenticatedRequest = Request & {
   user: {
@@ -43,12 +45,13 @@ export class UsersController {
     }
 
     return users.map(
-      ({ id, username, roles, about, avatar, createdAt, updatedAt }) => ({
+      ({ id, username, roles, about, avatar, telegramUsername, createdAt, updatedAt }) => ({
         id,
         username,
         roles,
         about,
         avatar,
+        telegramUsername,
         createdAt,
         updatedAt,
       }),
@@ -122,6 +125,33 @@ export class UsersController {
     const { password, yandexId, ...profile } = updatedUser;
 
     return profile;
+  }
+
+  @UseGuards(JwtGuard)
+  @Patch(':id/moderator')
+  async setModeratorRole(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: SetModeratorRoleDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    if (!req.user.roles.includes(UserRole.ADMIN)) {
+      throw new ForbiddenException(
+        'Только администратор может управлять ролью модератора',
+      );
+    }
+
+    if (id === req.user.id) {
+      throw new ForbiddenException(
+        'Нельзя изменять собственную роль модератора',
+      );
+    }
+
+    const user = await this.usersService.setModeratorRole(id, dto.enabled);
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    return { id: user.id, roles: user.roles };
   }
 
   @UseGuards(JwtGuard)

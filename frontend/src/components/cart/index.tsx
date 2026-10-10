@@ -6,6 +6,7 @@ import { Button, Divider, Empty, Spin, Typography } from 'antd';
 import { useGetCartQuery, type CartItem } from '@/app-store/api/cart-api';
 import { getCart, transferGuestCartToServer } from '@/app-store/reducers/cart-slice';
 import { useAppDispatch, useAppSelector } from '@/hooks';
+import { formatCurrency, type CurrencyCode } from '@/utils/currency';
 
 import styles from './cart.module.css';
 
@@ -14,9 +15,6 @@ type CartProps = {
   onChangeQuantity: (itemId: string, quantity: number) => void;
   onClearCart: () => void;
 };
-
-const formatPrice = (amount: number): string =>
-  new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'USD' }).format(amount);
 
 const Cart = ({ onRemoveProduct, onChangeQuantity, onClearCart }: CartProps): JSX.Element => {
   const dispatch = useAppDispatch();
@@ -67,6 +65,21 @@ const Cart = ({ onRemoveProduct, onChangeQuantity, onClearCart }: CartProps): JS
     );
   }
 
+  const totalsByCurrency = cart.items.reduce(
+    (totals, item) => {
+      const currencyCode: CurrencyCode = item.product.currencyCode ?? 'USD';
+      const current = totals.find((total) => total.currencyCode === currencyCode);
+      const discountedPrice = item.quantity * item.product.price * (1 - item.product.discountPercentage / 100);
+      if (current) {
+        current.amount += discountedPrice;
+      } else {
+        totals.push({ currencyCode, amount: discountedPrice });
+      }
+      return totals;
+    },
+    [] as { currencyCode: CurrencyCode; amount: number }[]
+  );
+
   return (
     <div className={styles.cart}>
       <ul className={styles.products}>
@@ -92,7 +105,9 @@ const Cart = ({ onRemoveProduct, onChangeQuantity, onClearCart }: CartProps): JS
                   onClick={() => onChangeQuantity(item.id, item.quantity + 1)}
                   size="small"
                 />
-                <span className={styles.unitPrice}>{formatPrice(item.product.price)} / шт.</span>
+                <span className={styles.unitPrice}>
+                  {formatCurrency(item.product.price, item.product.currencyCode ?? 'USD')} / шт.
+                </span>
               </div>
               {item.product.discountPercentage > 0 ? (
                 <p className={styles.discount}>Скидка {item.product.discountPercentage}%</p>
@@ -100,10 +115,15 @@ const Cart = ({ onRemoveProduct, onChangeQuantity, onClearCart }: CartProps): JS
             </div>
             <div className={styles.productTotal}>
               {item.product.discountPercentage > 0 ? (
-                <span className={styles.originalPrice}>{formatPrice(item.product.price * item.quantity)}</span>
+                <span className={styles.originalPrice}>
+                  {formatCurrency(item.product.price * item.quantity, item.product.currencyCode ?? 'USD')}
+                </span>
               ) : null}
               <strong>
-                {formatPrice(item.product.price * item.quantity * (1 - item.product.discountPercentage / 100))}
+                {formatCurrency(
+                  item.product.price * item.quantity * (1 - item.product.discountPercentage / 100),
+                  item.product.currencyCode ?? 'USD'
+                )}
               </strong>
             </div>
             <Button
@@ -121,12 +141,14 @@ const Cart = ({ onRemoveProduct, onChangeQuantity, onClearCart }: CartProps): JS
           <Typography.Text type="secondary">Товаров</Typography.Text>
           <Typography.Text>{cart.totalItems}</Typography.Text>
         </div>
-        <div className={styles.summaryLine}>
-          <Typography.Text strong>Итого</Typography.Text>
-          <Typography.Text className={styles.grandTotal} strong>
-            {formatPrice(cart.totalPrice)}
-          </Typography.Text>
-        </div>
+        {totalsByCurrency.map(({ currencyCode, amount }) => (
+          <div className={styles.summaryLine} key={currencyCode}>
+            <Typography.Text strong>Итого ({currencyCode})</Typography.Text>
+            <Typography.Text className={styles.grandTotal} strong>
+              {formatCurrency(amount, currencyCode)}
+            </Typography.Text>
+          </div>
+        ))}
         <Button className={styles.clearButton} danger onClick={onClearCart}>
           Очистить корзину
         </Button>

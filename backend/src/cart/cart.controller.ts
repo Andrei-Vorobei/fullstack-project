@@ -30,6 +30,11 @@ export class CartController {
     return this.cartService.getCart(request.user.id);
   }
 
+  @Get('users/:userId')
+  getUserCart(@Param('userId', new ParseUUIDPipe()) userId: string) {
+    return this.cartService.getCart(userId);
+  }
+
   @Post('items')
   addItem(@Req() request: AuthenticatedRequest, @Body() dto: AddCartItemDto) {
     return this.cartService.addItem(

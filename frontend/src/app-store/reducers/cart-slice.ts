@@ -82,6 +82,7 @@ export const cartSlice = createSlice({
               id: product.id,
               title: product.title,
               price: product.price,
+              currencyCode: product.currencyCode,
               discountPercentage: product.discountPercentage,
               thumbnail: product.thumbnail,
             },

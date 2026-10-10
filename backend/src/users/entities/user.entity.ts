@@ -40,6 +40,9 @@ export class User {
   @Column({ length: 200, default: 'Пока ничего не рассказал о себе' })
   about: string;
 
+  @Column({ type: 'varchar', length: 32, nullable: true, default: null })
+  telegramUsername: string | null;
+
   @Column({
     default: 'https://i.pravatar.cc/300',
     length: 500,

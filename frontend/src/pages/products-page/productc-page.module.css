@@ -1,4 +1,10 @@
-﻿.filters {
+.pageContainer {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+}
+
+.filters {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
@@ -50,4 +56,9 @@
 .spinner {
   height: 100%;
   width: 100%;
+}
+
+.pagination {
+  margin-top: auto;
+  padding-top: 16px;
 }

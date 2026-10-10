@@ -2,13 +2,14 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit/react';
 
 import { authApi } from '@/app-store/api/auth-api';
 
-export type UserRole = 'user' | 'admin';
+export type UserRole = 'user' | 'admin' | 'moderator';
 
 export type UserProfile = {
   id: string;
   username: string;
   about: string;
   avatar: string;
+  telegramUsername: string | null;
   email: string;
   roles: UserRole[];
   createdAt: string;
@@ -58,6 +59,7 @@ export const userSlice = createSlice({
         username: payload.username,
         about: payload.about,
         avatar: payload.avatar,
+        telegramUsername: payload.telegramUsername ?? null,
         email: payload.email,
         roles: payload.roles,
         createdAt: payload.createdAt,

@@ -40,6 +40,16 @@ describe('CartController', () => {
     expect(cartService.getCart).toHaveBeenCalledWith('user-id');
   });
 
+  it('reads the requested user cart without exposing a write operation', async () => {
+    const cart = { id: 'cart-id', items: [], totalItems: 0, totalPrice: 0 };
+    cartService.getCart.mockResolvedValue(cart);
+
+    await expect(
+      controller.getUserCart('other-user-id'),
+    ).resolves.toEqual(cart);
+    expect(cartService.getCart).toHaveBeenCalledWith('other-user-id');
+  });
+
   it('uses the authenticated user when adding an item', async () => {
     const request = { user: { id: 'user-id' } } as {
       user: User;
