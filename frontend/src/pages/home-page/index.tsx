@@ -88,13 +88,9 @@ const HomePage = (): JSX.Element => {
         </aside>
       </section>
 
-      <section className={styles.contact} aria-labelledby="contact-title">
+      {/* <section className={styles.contact} aria-labelledby="contact-title">
         <div>
           <p className={styles.eyebrow}>Контакты</p>
-          <h2 className={styles.contactTitle} id="contact-title">
-            Давай познакомимся
-          </h2>
-          <p className={styles.contactText}>Контактные данные пока демонстрационные — заменю их на актуальные.</p>
         </div>
         <div className={styles.contactLinks}>
           <a className={styles.contactLink} href="mailto:your.email@example.com">
@@ -111,7 +107,7 @@ const HomePage = (): JSX.Element => {
             github.com/your-username
           </a>
         </div>
-      </section>
+      </section> */}
     </div>
   );
 };
