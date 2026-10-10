@@ -11,6 +11,8 @@ import { Exclude } from 'class-transformer';
 import { UserRole } from './user-role.enum.js';
 import { Cart } from '../../cart/entities/cart.entity.js';
 
+export const DEFAULT_USER_AVATAR = 'https://i.pravatar.cc/300';
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -44,7 +46,7 @@ export class User {
   telegramUsername: string | null;
 
   @Column({
-    default: 'https://i.pravatar.cc/300',
+    default: DEFAULT_USER_AVATAR,
     length: 500,
   })
   avatar: string;

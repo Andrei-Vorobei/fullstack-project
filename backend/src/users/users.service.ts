@@ -15,7 +15,10 @@ import {
 import { isEmail } from 'class-validator';
 import * as bcrypt from 'bcrypt';
 import { Profile } from 'passport-yandex';
-import { User } from './entities/user.entity.js';
+import {
+  DEFAULT_USER_AVATAR,
+  User,
+} from './entities/user.entity.js';
 import { UserRole } from './entities/user-role.enum.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
@@ -120,9 +123,10 @@ export class UsersService {
   }
 
   async createFromYandex(profile: Profile): Promise<User> {
-    const { id, displayName, emails } = profile;
+    const { id, displayName, emails, photos } = profile;
 
     const email = emails?.[0]?.value ?? null;
+    const avatar = photos?.[0]?.value;
 
     if (!email || !isEmail(email)) {
       throw new BadRequestException('Некорректный или отсутствующий email');
@@ -134,6 +138,12 @@ export class UsersService {
 
       if (existingUser) {
         existingUser.yandexId = id;
+        if (
+          avatar &&
+          existingUser.avatar === DEFAULT_USER_AVATAR
+        ) {
+          existingUser.avatar = avatar;
+        }
         return repository.save(existingUser);
       }
 
@@ -143,6 +153,7 @@ export class UsersService {
             yandexId: id,
             username: displayName || `yandex_user_${id}`,
             email,
+            ...(avatar ? { avatar } : {}),
             roles: [UserRole.USER],
             password: await bcrypt.hash(`yandex:${id}`, 10),
           }),
@@ -164,5 +175,15 @@ export class UsersService {
         throw error;
       }
     });
+  }
+
+  async updateYandexAvatar(user: User, profile: Profile): Promise<User> {
+    const avatar = profile.photos?.[0]?.value;
+    if (!avatar || user.avatar !== DEFAULT_USER_AVATAR) {
+      return user;
+    }
+
+    user.avatar = avatar;
+    return this.userRepository.save(user);
   }
 }

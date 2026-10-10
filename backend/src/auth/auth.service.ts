@@ -117,9 +117,9 @@ export class AuthService {
   async validateFromYandex(profile: Profile): Promise<AuthenticatedUser> {
     let user = await this.usersService.findByYandexID(profile.id);
 
-    if (!user) {
-      user = await this.usersService.createFromYandex(profile);
-    }
+    user = user
+      ? await this.usersService.updateYandexAvatar(user, profile)
+      : await this.usersService.createFromYandex(profile);
 
     return { id: user.id };
   }

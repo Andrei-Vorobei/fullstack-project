@@ -15,6 +15,7 @@ export class YandexStrategy extends PassportStrategy(Strategy) {
       clientSecret: configService.getOrThrow<string>('YANDEX_CLIENT_SECRET'),
       callbackURL: configService.getOrThrow<string>('YANDEX_REDIRECT_URI'),
       scope: ['login:info', 'login:email'],
+      force_confirm: 'yes',
     });
   }
 
