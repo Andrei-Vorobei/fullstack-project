@@ -37,7 +37,7 @@ export type Product = {
   rating: number;
   stock: number;
   brand: string;
-  sku: string;
+  sku: string | null;
   weight: number;
   dimensions: ProductDimensions;
   availabilityStatus: string;

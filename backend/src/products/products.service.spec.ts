@@ -319,7 +319,7 @@ describe('ProductsService', () => {
         }),
       }),
     );
-    expect(repositoryInput.sku).toMatch(/^CUSTOM-[0-9a-f-]{36}$/i);
+    expect(repositoryInput.sku).toBeNull();
     expect(categoriesRepository.findOneBy).toHaveBeenCalledWith({
       slug: 'electronics',
     });
@@ -554,6 +554,47 @@ describe('ProductsService', () => {
       expect.objectContaining({ title: 'New title' }),
     );
     expect(updatedProduct.availabilityStatus).toBe('Нет в наличии');
+  });
+
+  it('updates category, specifications, brand, SKU and availability', async () => {
+    const product = {
+      id: 'product-id',
+      category: 'old-category',
+      brand: 'Old brand',
+      sku: 'OLD-1',
+      stock: 4,
+      availabilityStatus: 'Low Stock',
+      weight: 1,
+      dimensions: { width: 1, height: 1, depth: 1 },
+      meta: { createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+    } as Product;
+    vi.mocked(productsRepository.findOneBy).mockResolvedValue(product);
+
+    await service.updateProduct('product-id', {
+      category: 'gadgets',
+      brand: '',
+      sku: '',
+      stock: 8,
+      availabilityStatus: 'In Stock',
+      weight: 2.5,
+      dimensions: { width: 10, height: 20, depth: 30 },
+    });
+
+    expect(categoriesRepository.findOneBy).toHaveBeenCalledWith({ slug: 'gadgets' });
+    expect(categoriesRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({ slug: 'gadgets' }),
+    );
+    expect(productsRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: 'gadgets',
+        brand: null,
+        sku: null,
+        stock: 8,
+        availabilityStatus: 'In Stock',
+        weight: 2.5,
+        dimensions: { width: 10, height: 20, depth: 30 },
+      }),
+    );
   });
 
   it('throws when updating a product that does not exist', async () => {

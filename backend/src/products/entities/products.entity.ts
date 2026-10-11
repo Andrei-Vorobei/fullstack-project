@@ -50,8 +50,8 @@ export class Product {
   @Column({ type: 'varchar', length: 255, nullable: true })
   brand: string | null;
 
-  @Column({ type: 'varchar', length: 100, unique: true })
-  sku: string;
+  @Column({ type: 'varchar', length: 100, unique: true, nullable: true })
+  sku: string | null;
 
   @Column({ type: 'double precision' })
   weight: number;

@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { readFile } from 'node:fs/promises';
-import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { Repository } from 'typeorm';
 import { Category } from './entities/category.entity.js';
@@ -151,7 +150,7 @@ export class ProductsService {
 
   async createProduct(input: CreateProductDto): Promise<Product> {
     const now = new Date().toISOString();
-    const sku = input.sku?.trim() || `CUSTOM-${randomUUID()}`;
+    const sku = input.sku?.trim() || null;
     const category = input.category.trim();
     const meta = input.meta;
 
@@ -377,8 +376,27 @@ export class ProductsService {
       throw new NotFoundException('Товар не найден');
     }
 
-    const availabilityStatus = product.availabilityStatus;
+    if (updates.category !== undefined) {
+      const category = updates.category.trim();
+      const slug = category.toLowerCase();
+      const existingCategory = await this.categoriesRepository.findOneBy({ slug });
+      if (!existingCategory) {
+        await this.categoriesRepository.save({
+          slug,
+          name: getCategoryName(slug),
+        });
+      }
+      updates.category = category;
+    }
+
+    const previousAvailability = product.availabilityStatus;
     Object.assign(product, updates);
+    if (updates.brand !== undefined) {
+      product.brand = updates.brand?.trim() || null;
+    }
+    if (updates.sku !== undefined) {
+      product.sku = updates.sku?.trim() || null;
+    }
 
     if (updates.images?.length) {
       product.thumbnail = updates.images[0];
@@ -387,9 +405,8 @@ export class ProductsService {
       product.availabilityStatus =
         updates.stock === 0
           ? 'Out of Stock'
-          : availabilityStatus === 'Out of Stock'
-            ? 'In Stock'
-            : availabilityStatus;
+          : updates.availabilityStatus ??
+            (previousAvailability === 'Out of Stock' ? 'In Stock' : previousAvailability);
     }
     product.meta = {
       ...product.meta,

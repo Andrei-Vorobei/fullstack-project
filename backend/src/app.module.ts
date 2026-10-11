@@ -33,6 +33,7 @@ import { NormalizeProductReviews1791770000000 } from './migrations/1791770000000
 import { ClearProductReviews1791780000000 } from './migrations/1791780000000-clear-product-reviews.js';
 import { ResetProductRatings1791790000000 } from './migrations/1791790000000-reset-product-ratings.js';
 import { AddReviewUpdatedAt1791800000000 } from './migrations/1791800000000-add-review-updated-at.js';
+import { MakeProductSkuOptional1791810000000 } from './migrations/1791810000000-make-product-sku-optional.js';
 import { OAuthSessionStore } from './auth/oauth-session.store.js';
 
 @Module({
@@ -98,6 +99,7 @@ import { OAuthSessionStore } from './auth/oauth-session.store.js';
             ClearProductReviews1791780000000,
             ResetProductRatings1791790000000,
             AddReviewUpdatedAt1791800000000,
+            MakeProductSkuOptional1791810000000,
           ],
           migrationsRun: true,
           installExtensions: false,

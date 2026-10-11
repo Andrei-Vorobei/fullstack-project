@@ -4,26 +4,46 @@ import {
   IsArray,
   IsIn,
   IsNumber,
-  IsNotEmpty,
   IsOptional,
   IsString,
   IsUrl,
+  Matches,
   Max,
   MaxLength,
   Min,
+  ValidateNested,
 } from 'class-validator';
+import { CreateProductDimensionsDto } from './create-product.dto.js';
 import { CURRENCY_CODES, type CurrencyCode } from '../../currencies/entities/currency.entity.js';
+
+const AVAILABILITY_STATUSES = ['In Stock', 'Out of Stock', 'Low Stock'] as const;
 
 export class UpdateProductDto {
   @IsOptional()
   @IsString()
-  @IsNotEmpty()
+  @Matches(/\S/)
   @MaxLength(255)
   title?: string;
 
   @IsOptional()
   @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/\S/)
+  @MaxLength(100)
+  category?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  brand?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  sku?: string | null;
 
   @IsOptional()
   @Type(() => Number)
@@ -47,6 +67,21 @@ export class UpdateProductDto {
   @IsNumber({ maxDecimalPlaces: 0 })
   @Min(0)
   stock?: number;
+
+  @IsOptional()
+  @IsIn(AVAILABILITY_STATUSES)
+  availabilityStatus?: (typeof AVAILABILITY_STATUSES)[number];
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  weight?: number;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreateProductDimensionsDto)
+  dimensions?: CreateProductDimensionsDto;
 
   @IsOptional()
   @IsArray()

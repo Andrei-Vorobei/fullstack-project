@@ -235,8 +235,15 @@
   gap: 12px;
 }
 
+.editDimensions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
 @media (max-width: 520px) {
-  .editNumbers {
+  .editNumbers,
+  .editDimensions {
     grid-template-columns: minmax(0, 1fr);
   }
 }

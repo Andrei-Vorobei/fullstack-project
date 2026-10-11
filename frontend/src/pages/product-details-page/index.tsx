@@ -46,45 +46,48 @@ type ProductDetailsPageContext = {
 type ProductEditValues = {
   title: string;
   description: string;
+  category: string;
+  brand: string;
+  sku: string;
   price: number;
   currencyCode: CurrencyCode;
   discountPercentage: number;
   stock: number;
+  availabilityStatus: string;
+  weight: number;
+  width: number;
+  height: number;
+  depth: number;
   images: string;
 };
 
 const labels = {
-  back: '\u041d\u0430\u0437\u0430\u0434 \u0432 \u043a\u0430\u0442\u0430\u043b\u043e\u0433',
-  gallery: '\u0424\u043e\u0442\u043e\u0433\u0430\u043b\u0435\u0440\u0435\u044f',
-  image: '\u0418\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u0435',
-  noImage: '\u0418\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u0435 \u043d\u0435\u0442',
-  inStock: '\u0412 \u043d\u0430\u043b\u0438\u0447\u0438\u0438',
-  outOfStock: '\u041d\u0435\u0442 \u0432 \u043d\u0430\u043b\u0438\u0447\u0438\u0438',
-  pieces: '\u0448\u0442.',
-  addToCart: '\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0432 \u043a\u043e\u0440\u0437\u0438\u043d\u0443',
-  description: '\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435',
-  noDescription:
-    '\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435 \u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d\u043e.',
-  characteristics: '\u0425\u0430\u0440\u0430\u043a\u0442\u0435\u0440\u0438\u0441\u0442\u0438\u043a\u0438',
-  category: '\u041a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u044f',
-  productId: '\u0418\u0414 \u0442\u043e\u0432\u0430\u0440\u0430',
-  brand: '\u0411\u0440\u0435\u043d\u0434',
-  sku: '\u0410\u0440\u0442\u0438\u043a\u0443\u043b',
-  price: '\u0426\u0435\u043d\u0430',
-  discount: '\u0421\u043a\u0438\u0434\u043a\u0430',
-  stock: '\u041e\u0441\u0442\u0430\u0442\u043e\u043a',
-  availability: '\u041d\u0430\u043b\u0438\u0447\u0438\u0435',
-  rating: '\u0420\u0435\u0439\u0442\u0438\u043d\u0433',
-  weight: '\u0412\u0435\u0441',
-  kilograms: '\u043a\u0433',
-  centimeters: '\u0441\u043c',
-  dimensions: '\u0420\u0430\u0437\u043c\u0435\u0440\u044b (\u0428 \u00d7 \u0412 \u00d7 \u0413)',
-  created: '\u0421\u043e\u0437\u0434\u0430\u043d',
-  updated: '\u041e\u0431\u043d\u043e\u0432\u043b\u0451\u043d',
-  reviews: '\u041e\u0442\u0437\u044b\u0432\u044b',
-  noReviews: '\u041f\u043e\u043a\u0430 \u043d\u0435\u0442 \u043e\u0442\u0437\u044b\u0432\u043e\u0432',
-  loadError:
-    '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u0442\u043e\u0432\u0430\u0440. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u043f\u043e\u0437\u0436\u0435.',
+  back: 'Назад в каталог',
+  gallery: 'Фотогалерея',
+  image: 'Изображение',
+  noImage: 'Изображение нет',
+  inStock: 'В наличии',
+  outOfStock: 'Нет в наличии',
+  pieces: 'шт.',
+  addToCart: 'Добавить в корзину',
+  description: 'Описание',
+  noDescription: 'Описание не указано.',
+  characteristics: 'Характеристики',
+  category: 'Категория',
+  brand: 'Бренд',
+  sku: 'Артикул',
+  price: 'Цена',
+  discount: 'Скидка',
+  stock: 'Остаток',
+  availability: 'Наличие',
+  rating: 'Рейтинг',
+  weight: 'Вес',
+  kilograms: 'кг',
+  centimeters: 'см',
+  dimensions: 'Размеры (Ш × В × Г)',
+  reviews: 'Отзывы',
+  noReviews: 'Пока нет отзывов',
+  loadError: 'Не удалось загрузить товар. Попробуйте позже.',
   loading: 'Загрузка товара…',
   edit: 'Редактировать',
   delete: 'Удалить',
@@ -99,6 +102,18 @@ const labels = {
   stockLabel: 'Остаток',
   imagesLabel: 'Ссылки на изображения (каждая с новой строки)',
   titleRequired: 'Название не может быть пустым',
+  categoryLabel: '\u041a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u044f',
+  brandLabel: '\u0411\u0440\u0435\u043d\u0434',
+  skuLabel: '\u0410\u0440\u0442\u0438\u043a\u0443\u043b',
+  weightLabel: '\u0412\u0435\u0441 (\u043a\u0433)',
+  dimensionsLabel: '\u0420\u0430\u0437\u043c\u0435\u0440\u044b (\u0441\u043c)',
+  widthLabel: '\u0428\u0438\u0440\u0438\u043d\u0430',
+  heightLabel: '\u0412\u044b\u0441\u043e\u0442\u0430',
+  depthLabel: '\u0413\u043b\u0443\u0431\u0438\u043d\u0430',
+  availabilityLabel: '\u041d\u0430\u043b\u0438\u0447\u0438\u0435',
+  inStockOption: '\u0412 \u043d\u0430\u043b\u0438\u0447\u0438\u0438',
+  lowStockOption: '\u041c\u0430\u043b\u043e \u043d\u0430 \u0441\u043a\u043b\u0430\u0434\u0435',
+  outOfStockOption: '\u041d\u0435\u0442 \u0432 \u043d\u0430\u043b\u0438\u0447\u0438\u0438',
   imageRequired: 'Добавьте хотя бы одну ссылку на изображение',
   saveSuccess: 'Товар обновлён',
   saveError: 'Не удалось сохранить товар',
@@ -157,10 +172,25 @@ const ProductDetailsPage = (): JSX.Element => {
     setEditValues({
       title: product.title,
       description: product.description,
+      category: product.category,
+      brand: product.brand ?? '',
+      sku: product.sku ?? '',
       price: product.price,
       currencyCode: product.currencyCode,
       discountPercentage: product.discountPercentage,
       stock: product.stock,
+      availabilityStatus:
+        (
+          {
+            '\u0412 \u043d\u0430\u043b\u0438\u0447\u0438\u0438': 'In Stock',
+            '\u041d\u0435\u0442 \u0432 \u043d\u0430\u043b\u0438\u0447\u0438\u0438': 'Out of Stock',
+            '\u041c\u0430\u043b\u043e \u043d\u0430 \u0441\u043a\u043b\u0430\u0434\u0435': 'Low Stock',
+          } as Record<string, string>
+        )[product.availabilityStatus] ?? 'In Stock',
+      weight: product.weight,
+      width: product.dimensions.width,
+      height: product.dimensions.height,
+      depth: product.dimensions.depth,
       images: product.images.join('\n'),
     });
     setIsEditOpen(true);
@@ -189,7 +219,17 @@ const ProductDetailsPage = (): JSX.Element => {
           price: editValues.price,
           currencyCode: editValues.currencyCode,
           discountPercentage: editValues.discountPercentage,
+          category: editValues.category,
+          brand: editValues.brand.trim(),
+          sku: editValues.sku.trim() || null,
           stock: editValues.stock,
+          availabilityStatus: editValues.availabilityStatus,
+          weight: editValues.weight,
+          dimensions: {
+            width: editValues.width,
+            height: editValues.height,
+            depth: editValues.depth,
+          },
           images,
         },
       }).unwrap();
@@ -279,7 +319,7 @@ const ProductDetailsPage = (): JSX.Element => {
               <div className={styles.discount}>
                 <Typography.Text delete>{formatCurrency(product.price, product.currencyCode)}</Typography.Text>
                 <Tag color="red">
-                  {'\u2212'}
+                  {'-'}
                   {Math.round(product.discountPercentage)}%
                 </Tag>
               </div>
@@ -351,10 +391,6 @@ const ProductDetailsPage = (): JSX.Element => {
               <dd>{categoryName}</dd>
             </div>
             <div>
-              <dt>{labels.productId}</dt>
-              <dd>{product.id}</dd>
-            </div>
-            <div>
               <dt>{labels.brand}</dt>
               <dd>{product.brand || '?'}</dd>
             </div>
@@ -395,24 +431,8 @@ const ProductDetailsPage = (): JSX.Element => {
             <div>
               <dt>{labels.dimensions}</dt>
               <dd>
-                {product.dimensions.width} {'\u00d7'} {product.dimensions.height} {'\u00d7'}{' '}
-                {product.dimensions.depth} {labels.centimeters}
-              </dd>
-            </div>
-            <div>
-              <dt>{labels.created}</dt>
-              <dd>
-                <time dateTime={product.meta.createdAt}>
-                  {new Date(product.meta.createdAt).toLocaleString('ru-RU')}
-                </time>
-              </dd>
-            </div>
-            <div>
-              <dt>{labels.updated}</dt>
-              <dd>
-                <time dateTime={product.meta.updatedAt}>
-                  {new Date(product.meta.updatedAt).toLocaleString('ru-RU')}
-                </time>
+                {product.dimensions.width} {'×'} {product.dimensions.height} {'×'} {product.dimensions.depth}{' '}
+                {labels.centimeters}
               </dd>
             </div>
           </dl>
@@ -488,6 +508,41 @@ const ProductDetailsPage = (): JSX.Element => {
               />
             </label>
             <label className={styles.editField}>
+              {labels.categoryLabel}
+              <Select
+                value={editValues.category}
+                options={[
+                  ...(!categories.some(({ slug }) => slug === product.category)
+                    ? [{ value: product.category, label: product.category }]
+                    : []),
+                  ...categories.map(({ slug, name }) => ({ value: slug, label: name })),
+                ]}
+                onChange={(category) => setEditValues((current) => (current ? { ...current, category } : current))}
+              />
+            </label>
+            <div className={styles.editNumbers}>
+              <label className={styles.editField}>
+                {labels.brandLabel}
+                <Input
+                  value={editValues.brand}
+                  maxLength={255}
+                  onChange={(event) =>
+                    setEditValues((current) => (current ? { ...current, brand: event.target.value } : current))
+                  }
+                />
+              </label>
+              <label className={styles.editField}>
+                {labels.skuLabel}
+                <Input
+                  value={editValues.sku}
+                  maxLength={100}
+                  onChange={(event) =>
+                    setEditValues((current) => (current ? { ...current, sku: event.target.value } : current))
+                  }
+                />
+              </label>
+            </div>
+            <label className={styles.editField}>
               {labels.descriptionLabel}
               <Input.TextArea
                 rows={4}
@@ -548,6 +603,52 @@ const ProductDetailsPage = (): JSX.Element => {
                   }
                 />
               </label>
+            </div>
+            <label className={styles.editField}>
+              {labels.availabilityLabel}
+              <Select
+                value={editValues.availabilityStatus}
+                options={[
+                  { value: 'In Stock', label: labels.inStockOption },
+                  { value: 'Low Stock', label: labels.lowStockOption },
+                  { value: 'Out of Stock', label: labels.outOfStockOption },
+                ]}
+                onChange={(availabilityStatus: string) =>
+                  setEditValues((current) => (current ? { ...current, availabilityStatus } : current))
+                }
+              />
+            </label>
+            <label className={styles.editField}>
+              {labels.weightLabel}
+              <InputNumber
+                min={0}
+                precision={2}
+                value={editValues.weight}
+                onChange={(value) =>
+                  setEditValues((current) => (current ? { ...current, weight: value ?? 0 } : current))
+                }
+              />
+            </label>
+            <div className={styles.editDimensions}>
+              {(
+                [
+                  ['width', labels.widthLabel],
+                  ['height', labels.heightLabel],
+                  ['depth', labels.depthLabel],
+                ] as const
+              ).map(([key, label]) => (
+                <label className={styles.editField} key={key}>
+                  {label}
+                  <InputNumber
+                    min={0}
+                    precision={2}
+                    value={editValues[key]}
+                    onChange={(value) =>
+                      setEditValues((current) => (current ? { ...current, [key]: value ?? 0 } : current))
+                    }
+                  />
+                </label>
+              ))}
             </div>
             <label className={styles.editField}>
               {labels.imagesLabel}
