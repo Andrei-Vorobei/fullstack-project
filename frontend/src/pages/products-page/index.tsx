@@ -267,7 +267,7 @@ const ProductsPage = (): JSX.Element => {
           allowClear={{ clearIcon: <CloseOutlined /> }}
           className={styles.categoryAutocomplete}
           placeholder="Категория"
-          value={category}
+          value={categoryNames.get(category) ?? category}
           options={categories.map(({ slug, name }) => ({ value: slug, label: name }))}
           onChange={(value: string) => updateFilter('category', value)}
         />
