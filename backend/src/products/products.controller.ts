@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   DefaultValuePipe,
+  Delete,
   ForbiddenException,
   Get,
   Param,
@@ -18,9 +19,13 @@ import { ProductsService } from './products.service.js';
 import { UserRole } from '#src/users/entities/user-role.enum.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
+import { CreateCategoryDto } from './dto/create-category.dto.js';
+import { CreateReviewDto } from './dto/create-review.dto.js';
+import { UpdateReviewDto } from './dto/update-review.dto.js';
 
 type AuthenticatedRequest = {
   user: {
+    id: string;
     roles: UserRole[];
   };
 };
@@ -32,6 +37,21 @@ export class ProductsController {
   @Get('categories')
   getCategories() {
     return this.productsService.getCategories();
+  }
+
+  @UseGuards(JwtGuard)
+  @Post('categories')
+  async createCategory(
+    @Body() dto: CreateCategoryDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    if (!req.user.roles.includes(UserRole.ADMIN)) {
+      throw new ForbiddenException(
+        'Только администратор может добавлять категории',
+      );
+    }
+
+    return this.productsService.createCategory(dto);
   }
 
   @Get()
@@ -68,6 +88,42 @@ export class ProductsController {
   }
 
   @UseGuards(JwtGuard)
+  @Post(':id/reviews')
+  createReview(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() review: CreateReviewDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.productsService.createReview(id, req.user.id, review);
+  }
+
+  @UseGuards(JwtGuard)
+  @Patch(':id/reviews/:reviewId')
+  updateReview(
+    @Param('id', ParseUUIDPipe) productId: string,
+    @Param('reviewId', ParseUUIDPipe) reviewId: string,
+    @Body() review: UpdateReviewDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.productsService.updateReview(productId, reviewId, req.user.id, review);
+  }
+
+  @UseGuards(JwtGuard)
+  @Delete(':id/reviews/:reviewId')
+  deleteReview(
+    @Param('id', ParseUUIDPipe) productId: string,
+    @Param('reviewId', ParseUUIDPipe) reviewId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.productsService.deleteReview(productId, reviewId, req.user.id, req.user.roles);
+  }
+
+  @Get(':id')
+  getProductById(@Param('id', ParseUUIDPipe) id: string) {
+    return this.productsService.getProductById(id);
+  }
+
+  @UseGuards(JwtGuard)
   @Post()
   createProduct(
     @Body() product: CreateProductDto,
@@ -78,6 +134,21 @@ export class ProductsController {
     }
 
     return this.productsService.createProduct(product);
+  }
+
+  @UseGuards(JwtGuard)
+  @Delete(':id')
+  deleteProduct(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    if (!req.user.roles.includes(UserRole.ADMIN)) {
+      throw new ForbiddenException(
+        '?????????????????? ???????? ????????????????????????????',
+      );
+    }
+
+    return this.productsService.deleteProduct(id);
   }
 
   @UseGuards(JwtGuard)

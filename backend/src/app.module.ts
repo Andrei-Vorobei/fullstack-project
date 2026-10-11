@@ -12,6 +12,7 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { ProductsModule } from './products/products.module.js';
 import { Product } from './products/entities/products.entity.js';
+import { Review } from './products/entities/review.entity.js';
 import { Cart } from './cart/entities/cart.entity.js';
 import { CartItem } from './cart/entities/cart-item.entity.js';
 import { GuestCartMigration } from './cart/entities/guest-cart-migration.entity.js';
@@ -25,6 +26,13 @@ import { AddTelegramUsername1791720000000 } from './migrations/1791720000000-add
 import { Currency } from './currencies/entities/currency.entity.js';
 import { CurrenciesModule } from './currencies/currencies.module.js';
 import { AddProductCurrencies1791730000000 } from './migrations/1791730000000-add-product-currencies.js';
+import { LocalizeCategoryNames1791740000000 } from './migrations/1791740000000-localize-category-names.js';
+import { RemoveUnneededProductFields1791750000000 } from './migrations/1791750000000-remove-unneeded-product-fields.js';
+import { DropProductTags1791760000000 } from './migrations/1791760000000-drop-product-tags.js';
+import { NormalizeProductReviews1791770000000 } from './migrations/1791770000000-normalize-product-reviews.js';
+import { ClearProductReviews1791780000000 } from './migrations/1791780000000-clear-product-reviews.js';
+import { ResetProductRatings1791790000000 } from './migrations/1791790000000-reset-product-ratings.js';
+import { AddReviewUpdatedAt1791800000000 } from './migrations/1791800000000-add-review-updated-at.js';
 import { OAuthSessionStore } from './auth/oauth-session.store.js';
 
 @Module({
@@ -69,6 +77,7 @@ import { OAuthSessionStore } from './auth/oauth-session.store.js';
           entities: [
             User,
             Product,
+            Review,
             Cart,
             CartItem,
             Category,
@@ -82,6 +91,13 @@ import { OAuthSessionStore } from './auth/oauth-session.store.js';
             AddModeratorUserRole1791710000000,
             AddTelegramUsername1791720000000,
             AddProductCurrencies1791730000000,
+            LocalizeCategoryNames1791740000000,
+            RemoveUnneededProductFields1791750000000,
+            DropProductTags1791760000000,
+            NormalizeProductReviews1791770000000,
+            ClearProductReviews1791780000000,
+            ResetProductRatings1791790000000,
+            AddReviewUpdatedAt1791800000000,
           ],
           migrationsRun: true,
           installExtensions: false,

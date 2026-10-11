@@ -64,13 +64,12 @@ describe('CartService', () => {
     });
   });
 
-  it('allows adding a quantity below the product minimum order quantity', async () => {
+  it('allows adding one item to the cart', async () => {
     const user = { id: 'user-id' } as User;
     const cart = { id: 'cart-id', user } as Cart;
     const product = {
       id: 'product-id',
       stock: 100,
-      minimumOrderQuantity: 20,
       price: 5,
     } as Product;
     const savedCart = {
@@ -107,7 +106,6 @@ describe('CartService', () => {
       totalItems: 1,
       totalPrice: 5,
     });
-
   });
 
   it('does not apply a guest cart migration more than once', async () => {

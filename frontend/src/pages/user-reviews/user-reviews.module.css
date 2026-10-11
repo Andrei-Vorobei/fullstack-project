@@ -1,0 +1,111 @@
+.page {
+  display: grid;
+  width: min(100% - 32px, 900px);
+  gap: 24px;
+  margin: 28px auto 56px;
+}
+
+.status {
+  display: flex;
+  min-height: 260px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.backLink {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 8px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.header h1 {
+  margin: 0;
+}
+
+.username {
+  margin: 8px 0 0 !important;
+}
+
+.reviewList {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reviewCard {
+  position: relative;
+  border-color: #e5e7eb;
+  border-radius: 14px;
+}
+
+.productHeader {
+  display: flex;
+  padding-right: 44px;
+  align-items: center;
+  gap: 14px;
+}
+
+.productHeader img {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+  border-radius: 8px;
+  background: #f9fafb;
+  object-fit: contain;
+}
+
+.productInfo {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 6px;
+}
+
+.productInfo a {
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.rating {
+  flex: 0 0 auto;
+  color: #92400e;
+  white-space: nowrap;
+}
+
+.comment {
+  margin: 14px 0 !important;
+  white-space: pre-line;
+}
+
+.productLink {
+  font-size: 13px;
+}
+
+@media (max-width: 560px) {
+  .page {
+    width: min(100% - 24px, 900px);
+    margin-top: 18px;
+  }
+
+  .header {
+    align-items: flex-start;
+  }
+
+  .productHeader {
+    flex-wrap: wrap;
+  }
+
+  .rating {
+    margin-left: 78px;
+  }
+}

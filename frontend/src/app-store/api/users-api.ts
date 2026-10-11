@@ -1,6 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 
 import type { UserProfile } from '../reducers/user-slice';
+import type { ProductReview } from './products-api';
 
 import { axiosBaseQuery } from './auth-api';
 
@@ -9,6 +10,16 @@ export type UsersListItem = Pick<
   'id' | 'username' | 'roles' | 'about' | 'avatar' | 'telegramUsername' | 'createdAt' | 'updatedAt'
 > &
   Partial<Pick<UserProfile, 'email'>>;
+
+export type UserReviewsResponse = {
+  user: Pick<UserProfile, 'id' | 'username' | 'avatar' | 'roles'>;
+  reviews: {
+    productId: string;
+    productTitle: string;
+    productThumbnail: string;
+    review: ProductReview;
+  }[];
+};
 
 export const usersApi = createApi({
   reducerPath: 'usersApi',
@@ -23,6 +34,9 @@ export const usersApi = createApi({
         url: '/users',
       }),
       providesTags: ['Users'],
+    }),
+    getUserReviews: builder.query<UserReviewsResponse, string>({
+      query: (id) => ({ url: `/users/${id}/reviews` }),
     }),
     setModeratorRole: builder.mutation<
       { id: string; roles: UserProfile['roles'] },
@@ -45,4 +59,5 @@ export const usersApi = createApi({
   }),
 });
 
-export const { useDeleteUserMutation, useGetUsersQuery, useSetModeratorRoleMutation } = usersApi;
+export const { useDeleteUserMutation, useGetUserReviewsQuery, useGetUsersQuery, useSetModeratorRoleMutation } =
+  usersApi;

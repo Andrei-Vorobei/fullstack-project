@@ -1,6 +1,8 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { CartItem } from '../../cart/entities/cart-item.entity.js';
 import type { CurrencyCode } from '../../currencies/entities/currency.entity.js';
+import { Review } from './review.entity.js';
+import type { Relation } from 'typeorm';
 
 export interface ProductDimensions {
   width: number;
@@ -8,19 +10,9 @@ export interface ProductDimensions {
   depth: number;
 }
 
-export interface ProductReview {
-  rating: number;
-  comment: string;
-  date: string;
-  reviewerName: string;
-  reviewerEmail: string;
-}
-
 export interface ProductMetadata {
   createdAt: string;
   updatedAt: string;
-  barcode: string;
-  qrCode: string;
 }
 
 @Entity('products')
@@ -55,9 +47,6 @@ export class Product {
   @Column({ type: 'integer' })
   stock: number;
 
-  @Column({ type: 'text', array: true, default: '{}' })
-  tags: string[];
-
   @Column({ type: 'varchar', length: 255, nullable: true })
   brand: string | null;
 
@@ -70,23 +59,11 @@ export class Product {
   @Column({ type: 'jsonb' })
   dimensions: ProductDimensions;
 
-  @Column({ type: 'text' })
-  warrantyInformation: string;
-
-  @Column({ type: 'text' })
-  shippingInformation: string;
-
   @Column({ type: 'varchar', length: 100 })
   availabilityStatus: string;
 
-  @Column({ type: 'jsonb', default: '[]' })
-  reviews: ProductReview[];
-
-  @Column({ type: 'text' })
-  returnPolicy: string;
-
-  @Column({ type: 'integer' })
-  minimumOrderQuantity: number;
+  @OneToMany(() => Review, (review) => review.product)
+  reviews: Relation<Review[]>;
 
   @Column({ type: 'jsonb' })
   meta: ProductMetadata;

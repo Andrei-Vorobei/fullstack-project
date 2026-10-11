@@ -1,6 +1,6 @@
 import type { JSX } from 'react';
 
-import { ShoppingCartOutlined } from '@ant-design/icons';
+import { ShoppingCartOutlined, StarOutlined } from '@ant-design/icons';
 import {
   Alert,
   Avatar,
@@ -161,10 +161,24 @@ const UsersPage = (): JSX.Element => {
                   {user.telegramUsername && <span className={styles.userTelegram}>@{user.telegramUsername}</span>}
                 </span>
               </button>
-              <Link className={styles.cartLink} to={`/users/${user.id}/cart`} state={{ username: user.username }}>
-                <ShoppingCartOutlined />
-                Просмотреть корзину
-              </Link>
+              <div className={styles.userLinks}>
+                <Link
+                  className={styles.cartLink}
+                  to={`/users/${user.id}/cart`}
+                  state={{ username: user.username }}
+                >
+                  <ShoppingCartOutlined />
+                  Просмотреть корзину
+                </Link>
+                <Link
+                  className={styles.cartLink}
+                  to={`/users/${user.id}/reviews`}
+                  state={{ username: user.username }}
+                >
+                  <StarOutlined />
+                  {'Отзывы пользователя'}
+                </Link>
+              </div>
             </div>
           ))}
         </div>

@@ -3,25 +3,40 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ProductsController } from './products.controller.js';
 import { ProductsService } from './products.service.js';
 import { UserRole } from '#src/users/entities/user-role.enum.js';
+import { CreateCategoryDto } from './dto/create-category.dto.js';
 
 describe('ProductsController', () => {
   let controller: ProductsController;
   let productsService: Pick<
     ProductsService,
+    | 'getCategories'
+    | 'getProductById'
+    | 'createReview'
+    | 'updateReview'
+    | 'deleteReview'
+    | 'createCategory'
     | 'getProductsAll'
     | 'getFilteredProducts'
     | 'createProduct'
     | 'importFromJson'
     | 'updateProduct'
+    | 'deleteProduct'
   >;
 
   beforeEach(async () => {
     productsService = {
+      getCategories: vi.fn(),
+      getProductById: vi.fn(),
+      createReview: vi.fn(),
+      updateReview: vi.fn(),
+      deleteReview: vi.fn(),
+      createCategory: vi.fn(),
       getProductsAll: vi.fn(),
       getFilteredProducts: vi.fn(),
       createProduct: vi.fn(),
       importFromJson: vi.fn(),
       updateProduct: vi.fn(),
+      deleteProduct: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -34,6 +49,34 @@ describe('ProductsController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it('creates a category for an administrator', async () => {
+    const dto = {
+      name: '\u0414\u043b\u044f \u0434\u043e\u043c\u0430',
+    } satisfies CreateCategoryDto;
+
+    await controller.createCategory(dto, {
+      user: { roles: [UserRole.ADMIN] },
+    });
+
+    expect(productsService.createCategory).toHaveBeenCalledWith(dto);
+  });
+
+  it('rejects category creation for non-administrators', async () => {
+    await expect(
+      controller.createCategory(
+        {
+          slug: 'dlya-doma',
+          name: '\u0414\u043b\u044f \u0434\u043e\u043c\u0430',
+        },
+        {
+          user: { roles: [UserRole.USER] },
+        },
+      ),
+    ).rejects.toThrow(ForbiddenException);
+
+    expect(productsService.createCategory).not.toHaveBeenCalled();
   });
 
   it('passes pagination query values to the service', async () => {
@@ -65,6 +108,37 @@ describe('ProductsController', () => {
       },
       20,
       10,
+    );
+  });
+
+  it('creates a review for the authenticated user', async () => {
+    const review = { rating: 5, comment: 'Excellent' };
+    await controller.createReview('product-id', review, {
+      user: { id: 'user-id', roles: [UserRole.USER] },
+    });
+    expect(productsService.createReview).toHaveBeenCalledWith(
+      'product-id',
+      'user-id',
+      review,
+    );
+  });
+
+  it('passes review edit requests and authenticated owner to the service', async () => {
+    const review = { rating: 4, comment: 'Updated' };
+    await controller.updateReview('product-id', 'review-id', review, { user: { id: 'user-id', roles: [UserRole.USER] } });
+    expect(productsService.updateReview).toHaveBeenCalledWith('product-id', 'review-id', 'user-id', review);
+  });
+
+  it('passes review deletion requests and authenticated roles to the service', async () => {
+    await controller.deleteReview('product-id', 'review-id', { user: { id: 'moderator-id', roles: [UserRole.MODERATOR] } });
+    expect(productsService.deleteReview).toHaveBeenCalledWith('product-id', 'review-id', 'moderator-id', [UserRole.MODERATOR]);
+  });
+
+  it('gets a product by ID', async () => {
+    await controller.getProductById('2ed0e9cc-a6b0-4d7e-8ce2-4c5f9e043d48');
+
+    expect(productsService.getProductById).toHaveBeenCalledWith(
+      '2ed0e9cc-a6b0-4d7e-8ce2-4c5f9e043d48',
     );
   });
 
@@ -142,6 +216,23 @@ describe('ProductsController', () => {
     ).rejects.toThrow(ForbiddenException);
 
     expect(productsService.importFromJson).not.toHaveBeenCalled();
+  });
+
+  it('deletes a product for an admin', async () => {
+    await controller.deleteProduct('product-id', {
+      user: { roles: [UserRole.ADMIN] },
+    });
+
+    expect(productsService.deleteProduct).toHaveBeenCalledWith('product-id');
+  });
+
+  it('rejects product deletion for non-admin users', async () => {
+    expect(() =>
+      controller.deleteProduct('product-id', {
+        user: { roles: [UserRole.USER] },
+      }),
+    ).toThrow(ForbiddenException);
+    expect(productsService.deleteProduct).not.toHaveBeenCalled();
   });
 
   it('updates a product for an admin', async () => {

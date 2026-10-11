@@ -5,11 +5,14 @@ import type { Currency, CurrencyCode } from '@/utils/currency';
 import { axiosBaseQuery } from './auth-api';
 
 export type ProductReview = {
+  id: string;
   rating: number;
   comment: string;
   date: string; // ISO 8601
+  updatedAt: string | null; // ISO 8601
   reviewerName: string;
-  reviewerEmail: string;
+  userId?: string | null;
+  authorIsAdmin?: boolean;
 };
 
 export type ProductDimensions = {
@@ -21,8 +24,6 @@ export type ProductDimensions = {
 export type ProductMeta = {
   createdAt: string; // ISO 8601
   updatedAt: string; // ISO 8601
-  barcode: string;
-  qrCode: string;
 };
 
 export type Product = {
@@ -35,17 +36,12 @@ export type Product = {
   discountPercentage: number;
   rating: number;
   stock: number;
-  tags: string[];
   brand: string;
   sku: string;
   weight: number;
   dimensions: ProductDimensions;
-  warrantyInformation: string;
-  shippingInformation: string;
   availabilityStatus: string;
   reviews: ProductReview[];
-  returnPolicy: string;
-  minimumOrderQuantity: number;
   meta: ProductMeta;
   thumbnail: string;
   images: string[];
@@ -72,7 +68,15 @@ export type FilteredProductsQuery = ProductFilters & {
   skip?: number;
 };
 
-export type ProductCategory = string;
+export type ProductCategory = {
+  slug: string;
+  name: string;
+};
+
+export type CreateCategoryRequest = {
+  slug: string;
+  name: string;
+};
 
 export type CreateProductRequest = Pick<
   Product,
@@ -97,6 +101,14 @@ export const productsApi = createApi({
     getCategories: builder.query<ProductCategory[], void>({
       query: () => ({ url: '/products/categories' }),
       providesTags: ['Product'],
+    }),
+    createCategory: builder.mutation<ProductCategory, CreateCategoryRequest>({
+      query: (category) => ({
+        url: '/products/categories',
+        method: 'POST',
+        data: category,
+      }),
+      invalidatesTags: ['Product'],
     }),
     getProducts: builder.query<ProductsResponse, { limit?: number; skip?: number }>({
       query: ({ limit, skip }) => ({
@@ -123,15 +135,49 @@ export const productsApi = createApi({
       providesTags: ['Product'],
     }),
 
-    getProductById: builder.query<Product, number>({
+    getProductById: builder.query<Product, string>({
       query: (id) => ({ url: `/products/${id}` }),
       providesTags: (_result, _error, id) => [{ type: 'Product', id }],
     }),
 
+    createReview: builder.mutation<ProductReview, { productId: string; rating: number; comment: string }>({
+      query: ({ productId, rating, comment }) => ({
+        url: `/products/${productId}/reviews`,
+        method: 'POST',
+        data: { rating, comment },
+      }),
+      invalidatesTags: (_result, _error, { productId }) => [{ type: 'Product', id: productId }, 'Product'],
+    }),
+
+    updateReview: builder.mutation<
+      ProductReview,
+      { productId: string; reviewId: string; rating: number; comment: string }
+    >({
+      query: ({ productId, reviewId, rating, comment }) => ({
+        url: `/products/${productId}/reviews/${reviewId}`,
+        method: 'PATCH',
+        data: { rating, comment },
+      }),
+      invalidatesTags: (_result, _error, { productId }) => [{ type: 'Product', id: productId }, 'Product'],
+    }),
+    deleteReview: builder.mutation<void, { productId: string; reviewId: string }>({
+      query: ({ productId, reviewId }) => ({
+        url: `/products/${productId}/reviews/${reviewId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (_result, _error, { productId }) => [{ type: 'Product', id: productId }, 'Product'],
+    }),
     importProducts: builder.mutation<{ message: string }, void>({
       query: () => ({
         url: '/products/import',
         method: 'POST',
+      }),
+      invalidatesTags: ['Product'],
+    }),
+    deleteProduct: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/products/${id}`,
+        method: 'DELETE',
       }),
       invalidatesTags: ['Product'],
     }),
@@ -157,10 +203,15 @@ export const productsApi = createApi({
 export const {
   useGetCurrenciesQuery,
   useGetCategoriesQuery,
+  useCreateCategoryMutation,
   useGetProductsQuery,
   useGetFilteredProductsQuery,
   useGetProductByIdQuery,
+  useCreateReviewMutation,
+  useUpdateReviewMutation,
+  useDeleteReviewMutation,
   useImportProductsMutation,
   useUpdateProductMutation,
   useCreateProductMutation,
+  useDeleteProductMutation,
 } = productsApi;

@@ -16,7 +16,10 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { CURRENCY_CODES, type CurrencyCode } from '../../currencies/entities/currency.entity.js';
+import {
+  CURRENCY_CODES,
+  type CurrencyCode,
+} from '../../currencies/entities/currency.entity.js';
 
 export class CreateProductDimensionsDto {
   @Type(() => Number)
@@ -35,36 +38,7 @@ export class CreateProductDimensionsDto {
   depth: number;
 }
 
-export class CreateProductReviewDto {
-  @Type(() => Number)
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
-  @Max(5)
-  rating: number;
-
-  @IsString()
-  comment: string;
-
-  @IsDateString()
-  date: string;
-
-  @IsString()
-  reviewerName: string;
-
-  @IsString()
-  reviewerEmail: string;
-}
-
 export class CreateProductMetaDto {
-  @IsOptional()
-  @IsString()
-  barcode?: string;
-
-  @IsOptional()
-  @IsString()
-  @IsUrl()
-  qrCode?: string;
-
   @IsOptional()
   @IsDateString()
   createdAt?: string;
@@ -132,18 +106,6 @@ export class CreateProductDto {
   discountPercentage?: number;
 
   @IsOptional()
-  @Type(() => Number)
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
-  @Max(5)
-  rating?: number;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  tags?: string[];
-
-  @IsOptional()
   @IsString()
   @MaxLength(100)
   sku?: string;
@@ -161,31 +123,7 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsString()
-  warrantyInformation?: string;
-
-  @IsOptional()
-  @IsString()
-  shippingInformation?: string;
-
-  @IsOptional()
-  @IsString()
   availabilityStatus?: string;
-
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateProductReviewDto)
-  reviews?: CreateProductReviewDto[];
-
-  @IsOptional()
-  @IsString()
-  returnPolicy?: string;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  minimumOrderQuantity?: number;
 
   @IsOptional()
   @ValidateNested()

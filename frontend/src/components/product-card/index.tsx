@@ -1,8 +1,22 @@
-import { ArrowLeftOutlined, ArrowRightOutlined, EditOutlined, StarFilled } from '@ant-design/icons';
-import { Alert, Button, Image, Input, InputNumber, message, Modal, Select, Tag } from 'antd';
+import {
+  ArrowLeftOutlined,
+  ArrowRightOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  LinkOutlined,
+  ShoppingCartOutlined,
+  StarFilled,
+} from '@ant-design/icons';
+import { Alert, Button, Image, Input, InputNumber, message, Modal, Popconfirm, Select, Tag } from 'antd';
 import { useState, type JSX } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router';
 
-import { useGetCurrenciesQuery, useUpdateProductMutation, type Product } from '@/app-store/api/products-api';
+import {
+  useDeleteProductMutation,
+  useGetCurrenciesQuery,
+  useUpdateProductMutation,
+  type Product,
+} from '@/app-store/api/products-api';
 import { getProfile } from '@/app-store/reducers/user-slice';
 import { useAppSelector } from '@/hooks';
 import { formatCurrency, getCurrencyLabel } from '@/utils/currency';
@@ -11,11 +25,16 @@ import styles from './product-card.module.css';
 
 type ProductCardProps = {
   product: Product;
+  categoryName: string;
   onAddToCart: (product: Product) => void;
+  hideCard?: boolean;
 };
 
-const ProductCard = ({ product, onAddToCart }: ProductCardProps): JSX.Element => {
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+const ProductCard = ({ product, categoryName, onAddToCart, hideCard = false }: ProductCardProps): JSX.Element => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { productId } = useParams();
+  const isDetailsOpen = productId === product.id && location.pathname.endsWith('/modal');
   const [isEditing, setIsEditing] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [editValues, setEditValues] = useState({
@@ -27,9 +46,16 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps): JSX.Element =>
     stock: product.stock,
     images: product.images.join('\n'),
   });
+  const openDetails = (): void => {
+    void navigate({ pathname: '/products/' + product.id + '/modal', search: location.search });
+  };
+  const closeDetails = (): void => {
+    void navigate({ pathname: '/products', search: location.search }, { replace: true });
+  };
   const profile = useAppSelector(getProfile);
   const isAdmin = profile?.roles.includes('admin') ?? false;
   const [updateProduct, { isLoading: isSaving }] = useUpdateProductMutation();
+  const [deleteProduct, { isLoading: isDeleting }] = useDeleteProductMutation();
   const {
     data: currencies = [],
     error: currenciesError,
@@ -50,6 +76,16 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps): JSX.Element =>
       images: product.images.join('\n'),
     });
     setIsEditing(true);
+  };
+
+  const handleDeleteProduct = async (): Promise<void> => {
+    try {
+      await deleteProduct(product.id).unwrap();
+      message.success('Товар удалён');
+      closeDetails();
+    } catch {
+      message.error('Не удалось удалить товар. Если он в корзине, сначала удалите его из корзины');
+    }
   };
 
   const saveProduct = async (): Promise<void> => {
@@ -89,87 +125,124 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps): JSX.Element =>
 
   return (
     <>
-      <li className={styles.card}>
-        <button
-          type="button"
-          className={styles.detailsTrigger}
-          aria-label={`Подробнее о товаре: ${product.title}`}
-          onClick={() => {
-            setActiveImageIndex(0);
-            setIsDetailsOpen(true);
-          }}
-        >
-          <div className={styles.imageContainer}>
-            {product.discountPercentage > 0 ? (
-              <span className={styles.discount}>−{Math.round(product.discountPercentage)}%</span>
-            ) : null}
-            <img className={styles.image} src={product.thumbnail} alt="" loading="lazy" />
-          </div>
-          <div className={styles.content}>
-            <div className={styles.metadata}>
-              <span className={styles.category}>{product.category}</span>
-              <span className={styles.rating} aria-label={`Рейтинг ${product.rating} из 5`}>
-                <StarFilled aria-hidden="true" />
-                {product.rating.toFixed(1)}
-              </span>
+      {!hideCard ? (
+        <li className={styles.card}>
+          <button
+            type="button"
+            className={styles.detailsTrigger}
+            aria-label={`Подробнее о товаре: ${product.title}`}
+            onClick={() => {
+              setActiveImageIndex(0);
+              openDetails();
+            }}
+          >
+            <div className={styles.imageContainer}>
+              {product.discountPercentage > 0 ? (
+                <span className={styles.discount}>−{Math.round(product.discountPercentage)}%</span>
+              ) : null}
+              <img className={styles.image} src={product.thumbnail} alt="" loading="lazy" />
             </div>
-            <h2 className={styles.title}>{product.title}</h2>
+            <div className={styles.content}>
+              <div className={styles.metadata}>
+                <span className={styles.category}>{categoryName}</span>
+                <span className={styles.rating} aria-label={`Рейтинг ${product.rating} из 5`}>
+                  <StarFilled aria-hidden="true" />
+                  {product.rating.toFixed(1)}
+                </span>
+              </div>
+              <h2 className={styles.title}>{product.title}</h2>
+            </div>
+          </button>
+          <div className={styles.footer}>
+            <div className={styles.prices}>
+              <span className={styles.price}>{formatCurrency(discountedPrice, product.currencyCode)}</span>
+              {product.discountPercentage > 0 ? (
+                <span className={styles.originalPrice}>{formatCurrency(product.price, product.currencyCode)}</span>
+              ) : null}
+            </div>
+            <Button type="primary" onClick={() => onAddToCart(product)}>
+              В корзину
+            </Button>
           </div>
-        </button>
-        <div className={styles.footer}>
-          <div className={styles.prices}>
-            <span className={styles.price}>{formatCurrency(discountedPrice, product.currencyCode)}</span>
-            {product.discountPercentage > 0 ? (
-              <span className={styles.originalPrice}>{formatCurrency(product.price, product.currencyCode)}</span>
-            ) : null}
-          </div>
-          <Button type="primary" onClick={() => onAddToCart(product)}>
-            В корзину
-          </Button>
-        </div>
-      </li>
+        </li>
+      ) : null}
       <Modal
-        title={isEditing ? 'Редактирование товара' : product.title}
+        title={isEditing ? 'Редактирование товара' : null}
         open={isDetailsOpen}
+        aria-label={product.title}
         onCancel={() => {
           if (!isSaving) {
-            setIsDetailsOpen(false);
+            closeDetails();
             setIsEditing(false);
           }
         }}
         footer={
-          isEditing
-            ? [
-                <Button key="cancel" disabled={isSaving} onClick={() => setIsEditing(false)}>
-                  Отмена
-                </Button>,
-                <Button key="save" type="primary" loading={isSaving} onClick={() => void saveProduct()}>
-                  Сохранить
-                </Button>,
-              ]
-            : [
-                isAdmin ? (
-                  <Button key="edit" icon={<EditOutlined />} onClick={startEditing}>
+          isEditing ? (
+            [
+              <Button key="cancel" disabled={isSaving} onClick={() => setIsEditing(false)}>
+                Отмена
+              </Button>,
+              <Button key="save" type="primary" loading={isSaving} onClick={() => void saveProduct()}>
+                Сохранить
+              </Button>,
+            ]
+          ) : (
+            <div className={styles.modalActions}>
+              {isAdmin ? (
+                <div className={styles.adminActions}>
+                  <Popconfirm
+                    title={`${product.title} удалить из базы?`}
+                    description="Это действие нельзя отменить."
+                    okText="Удалить"
+                    cancelText="Отмена"
+                    okButtonProps={{ danger: true, loading: isDeleting }}
+                    onConfirm={() => void handleDeleteProduct()}
+                  >
+                    <Button danger icon={<DeleteOutlined />} loading={isDeleting}>
+                      Удалить
+                    </Button>
+                  </Popconfirm>
+                  <Button icon={<EditOutlined />} onClick={startEditing}>
                     Редактировать
                   </Button>
-                ) : null,
-                <Button key="close" onClick={() => setIsDetailsOpen(false)}>
-                  Закрыть
-                </Button>,
+                </div>
+              ) : null}
+              <div className={styles.mainActions}>
                 <Button
-                  key="add-to-cart"
+                  icon={<StarFilled />}
+                  onClick={() =>
+                    void navigate({ pathname: `/products/${product.id}/reviews`, search: location.search })
+                  }
+                >
+                  {'Отзывы' + ' (' + product.reviews.length + ')'}
+                </Button>
+                <Button
+                  icon={<LinkOutlined />}
+                  onClick={() =>
+                    void navigate({ pathname: '/products/' + product.id + '/page', search: location.search })
+                  }
+                >
+                  Подробнее о товаре
+                </Button>
+                <Button onClick={closeDetails}>К товарам</Button>
+                <Button
+                  className={styles.addToCartButton}
                   type="primary"
+                  icon={<ShoppingCartOutlined />}
                   onClick={() => {
                     onAddToCart(product);
-                    setIsDetailsOpen(false);
+                    closeDetails();
                   }}
                 >
                   В корзину
-                </Button>,
-              ]
+                </Button>
+              </div>
+            </div>
+          )
         }
-        width={800}
-        styles={{ body: { maxHeight: 'calc(100vh - 220px)', overflowY: 'auto' } }}
+        centered
+        width={920}
+        styles={{ body: { maxHeight: 'calc(100vh - 190px)', overflowY: 'auto' } }}
       >
         {isEditing ? (
           <div className={styles.editForm}>
@@ -303,7 +376,18 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps): JSX.Element =>
               </div>
             </Image.PreviewGroup>
             <div className={styles.detailSummary}>
-              <p className={styles.detailDescription}>{product.description}</p>
+              <span className={styles.detailCategory}>{categoryName}</span>
+              <h2 className={styles.detailTitle}>{product.title}</h2>
+              <div className={styles.detailMeta}>
+                <span className={styles.detailRating}>
+                  <StarFilled aria-hidden="true" /> {product.rating.toFixed(1)} / 5
+                </span>
+                <span className={product.stock > 0 ? styles.stockAvailable : styles.stockUnavailable}>
+                  <span className={styles.stockIndicator} aria-hidden="true" />
+                  {product.stock > 0 ? 'В наличии' : 'Нет в наличии'}
+                  {product.stock > 0 ? `· ${product.stock} шт.` : ''}
+                </span>
+              </div>
               <div className={styles.detailPrices}>
                 <span className={styles.price}>{formatCurrency(discountedPrice, product.currencyCode)}</span>
                 {product.discountPercentage > 0 ? (
@@ -315,82 +399,7 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps): JSX.Element =>
                   </>
                 ) : null}
               </div>
-              <dl className={styles.detailList}>
-                <div>
-                  <dt>Категория</dt>
-                  <dd>{product.category}</dd>
-                </div>
-                <div>
-                  <dt>Бренд</dt>
-                  <dd>{product.brand || 'Не указан'}</dd>
-                </div>
-                <div>
-                  <dt>Артикул</dt>
-                  <dd>{product.sku}</dd>
-                </div>
-                <div>
-                  <dt>Наличие</dt>
-                  <dd>
-                    {product.availabilityStatus} ({product.stock} шт.)
-                  </dd>
-                </div>
-                <div>
-                  <dt>Рейтинг</dt>
-                  <dd>
-                    <StarFilled aria-hidden="true" /> {product.rating.toFixed(1)} из 5
-                  </dd>
-                </div>
-                <div>
-                  <dt>Вес</dt>
-                  <dd>{product.weight} кг</dd>
-                </div>
-                <div>
-                  <dt>Размеры (Ш × В × Г)</dt>
-                  <dd>
-                    {product.dimensions.width} × {product.dimensions.height} × {product.dimensions.depth} см
-                  </dd>
-                </div>
-                <div>
-                  <dt>Гарантия</dt>
-                  <dd>{product.warrantyInformation}</dd>
-                </div>
-                <div>
-                  <dt>Доставка</dt>
-                  <dd>{product.shippingInformation}</dd>
-                </div>
-                <div>
-                  <dt>Возврат</dt>
-                  <dd>{product.returnPolicy}</dd>
-                </div>
-                <div>
-                  <dt>Минимальный заказ</dt>
-                  <dd>{product.minimumOrderQuantity} шт.</dd>
-                </div>
-              </dl>
-              {product.tags.length > 0 && (
-                <div className={styles.tags} aria-label="Теги товара">
-                  {product.tags.map((tag) => (
-                    <Tag key={tag}>{tag}</Tag>
-                  ))}
-                </div>
-              )}
-              {product.reviews.length > 0 && (
-                <section className={styles.reviews} aria-labelledby={`reviews-${product.id}`}>
-                  <h3 id={`reviews-${product.id}`}>Отзывы</h3>
-                  {product.reviews.map((review, index) => (
-                    <article key={`${review.reviewerName}-${review.date}-${index}`} className={styles.review}>
-                      <div className={styles.reviewHeader}>
-                        <strong>{review.reviewerName}</strong>
-                        <span className={styles.rating}>
-                          <StarFilled aria-hidden="true" /> {review.rating.toFixed(1)}
-                        </span>
-                      </div>
-                      <p>{review.comment}</p>
-                      <time dateTime={review.date}>{new Date(review.date).toLocaleDateString('ru-RU')}</time>
-                    </article>
-                  ))}
-                </section>
-              )}
+              <p className={styles.detailDescription}>{product.description || 'Описание не указано'}</p>
             </div>
           </div>
         )}

@@ -3,6 +3,7 @@ import {
   Column,
   PrimaryGeneratedColumn,
   CreateDateColumn,
+  OneToMany,
   OneToOne,
   UpdateDateColumn,
 } from 'typeorm';
@@ -10,6 +11,7 @@ import type { Relation } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { UserRole } from './user-role.enum.js';
 import { Cart } from '../../cart/entities/cart.entity.js';
+import { Review } from '../../products/entities/review.entity.js';
 
 export const DEFAULT_USER_AVATAR = 'https://i.pravatar.cc/300';
 
@@ -66,4 +68,7 @@ export class User {
 
   @OneToOne(() => Cart, (cart) => cart.user)
   cart: Relation<Cart>;
+
+  @OneToMany(() => Review, (review) => review.user)
+  reviews: Relation<Review[]>;
 }

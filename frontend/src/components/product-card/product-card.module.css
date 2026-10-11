@@ -154,9 +154,9 @@
 
 .details {
   display: grid;
-  align-items: start;
-  grid-template-columns: minmax(180px, 1fr) minmax(0, 1.4fr);
-  gap: 24px;
+  align-items: stretch;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 32px;
   padding-top: 8px;
 }
 
@@ -166,8 +166,12 @@
 
 .galleryStage {
   position: relative;
-  height: 320px;
+  display: grid;
+  height: 380px;
   overflow: hidden;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #f9fafb, #f3f4f6);
+  place-items: center;
 }
 
 .galleryTrack {
@@ -183,8 +187,8 @@
   flex: 0 0 100%;
   min-width: 0;
   height: 100%;
+  padding: 20px 42px;
   place-items: center;
-  padding: 0 40px;
 }
 
 .gallerySlide :global(.ant-image) {
@@ -194,7 +198,7 @@
 
 .gallerySlide :global(.ant-image-img) {
   width: 100%;
-  max-height: 320px;
+  max-height: 340px;
   object-fit: contain;
 }
 
@@ -223,7 +227,65 @@
 }
 
 .detailSummary {
+  display: flex;
   min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12px 0;
+}
+
+.detailCategory {
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.detailTitle {
+  margin: 8px 0 14px;
+  color: #111827;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.detailMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 18px;
+}
+
+.detailRating,
+.stockAvailable,
+.stockUnavailable {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.detailRating {
+  color: #b45309;
+}
+
+.stockAvailable {
+  color: #15803d;
+}
+
+.stockUnavailable {
+  color: #b91c1c;
+}
+
+.stockIndicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentcolor;
 }
 
 .editForm {
@@ -251,111 +313,96 @@
 }
 
 .detailDescription {
-  margin: 0 0 12px;
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 4px 0 0;
   color: #4b5563;
   line-height: 1.6;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
 }
 
 .detailPrices {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  margin: 24px 0 14px;
 }
 
 .detailPrices .price {
-  font-size: 22px;
-}
-
-.detailList {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 16px;
-  margin: 0;
-}
-
-.detailList > div {
-  min-width: 0;
-}
-
-.detailList dt {
-  margin-bottom: 3px;
-  color: #6b7280;
-  font-size: 12px;
-}
-
-.detailList dd {
-  margin: 0;
   color: #111827;
-  overflow-wrap: anywhere;
+  font-size: 30px;
+  line-height: 1.1;
 }
 
-.detailList dd :global(.anticon) {
-  color: #b45309;
-}
-
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 16px;
-}
-
-.reviews {
-  margin-top: 20px;
-}
-
-.reviews h3 {
-  margin: 0 0 10px;
-  font-size: 16px;
-}
-
-.review {
-  padding: 12px 0;
-  border-top: 1px solid #e5e7eb;
-}
-
-.reviewHeader {
+.modalActions {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
-.review p {
-  margin: 6px 0;
-  color: #4b5563;
+.adminActions,
+.mainActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }
 
-.review time {
-  color: #9ca3af;
-  font-size: 12px;
+.mainActions {
+  justify-content: flex-end;
+  margin-left: auto;
 }
 
 @media (width <= 600px) {
   .details {
     grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
-  }
-
-  .editNumbers {
-    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
   }
 
   .galleryStage {
-    height: 240px;
+    height: 260px;
   }
 
   .gallerySlide :global(.ant-image-img) {
-    max-height: 240px;
+    max-height: 230px;
   }
 
-  .galleryArrowPrevious {
-    left: 0;
+  .detailSummary {
+    padding: 0;
   }
 
-  .galleryArrowNext {
-    right: 0;
+  .detailTitle {
+    font-size: 22px;
+  }
+
+  .detailPrices {
+    margin-top: 18px;
+  }
+
+  .modalActions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .adminActions,
+  .mainActions {
+    width: 100%;
+  }
+
+  .adminActions > *,
+  .mainActions > * {
+    flex: 1;
+  }
+
+  .mainActions {
+    margin-left: 0;
+  }
+
+  .mainActions > .addToCartButton {
+    flex-basis: 100%;
   }
 }
 

@@ -6,11 +6,13 @@ import {
 } from '@nestjs/common';
 import { UsersController } from './users.controller.js';
 import { UsersService } from './users.service.js';
+import { ProductsService } from '../products/products.service.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { UserRole } from './entities/user-role.enum.js';
 
 describe('UsersController', () => {
   let controller: UsersController;
+  let productsService: { getReviewsByUserId: ReturnType<typeof vi.fn> };
   let usersService: {
     findUserByFilter: ReturnType<typeof vi.fn>;
     findUserById: ReturnType<typeof vi.fn>;
@@ -21,6 +23,7 @@ describe('UsersController', () => {
   };
 
   beforeEach(async () => {
+    productsService = { getReviewsByUserId: vi.fn() };
     usersService = {
       findUserByFilter: vi.fn(),
       findUserById: vi.fn(),
@@ -32,7 +35,10 @@ describe('UsersController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
-      providers: [{ provide: UsersService, useValue: usersService }],
+      providers: [
+        { provide: UsersService, useValue: usersService },
+        { provide: ProductsService, useValue: productsService },
+      ],
     }).compile();
 
     controller = module.get<UsersController>(UsersController);
@@ -40,6 +46,34 @@ describe('UsersController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it('returns user reviews without exposing the user email', async () => {
+    const user = {
+      id: 'ad27d56a-70c3-4ae4-bc6d-3b9da7b98b49',
+      username: 'alice',
+      avatar: 'https://example.com/avatar.png',
+      email: 'alice@example.com',
+    };
+    const reviews = [
+      {
+        productId: 'product-id',
+        review: {
+          rating: 5,
+          comment: 'Great',
+          date: '2026-01-01',
+          reviewerName: 'alice',
+        },
+      },
+    ];
+    usersService.findUserById.mockResolvedValue(user);
+    productsService.getReviewsByUserId.mockResolvedValue(reviews);
+
+    await expect(controller.getUserReviews(user.id)).resolves.toEqual({
+      user: { id: user.id, username: user.username, avatar: user.avatar },
+      reviews,
+    });
+    expect(productsService.getReviewsByUserId).toHaveBeenCalledWith(user.id);
   });
 
   describe('findAll', () => {
@@ -296,12 +330,19 @@ describe('UsersController', () => {
         });
 
         await expect(
-          controller.setModeratorRole(targetId, { enabled: true }, adminRequest),
+          controller.setModeratorRole(
+            targetId,
+            { enabled: true },
+            adminRequest,
+          ),
         ).resolves.toEqual({
           id: targetId,
           roles: [UserRole.USER, UserRole.MODERATOR],
         });
-        expect(usersService.setModeratorRole).toHaveBeenCalledWith(targetId, true);
+        expect(usersService.setModeratorRole).toHaveBeenCalledWith(
+          targetId,
+          true,
+        );
       });
 
       it('rejects non-admin users', async () => {
@@ -312,7 +353,11 @@ describe('UsersController', () => {
         };
 
         await expect(
-          controller.setModeratorRole(targetId, { enabled: true }, regularUserRequest),
+          controller.setModeratorRole(
+            targetId,
+            { enabled: true },
+            regularUserRequest,
+          ),
         ).rejects.toThrow(ForbiddenException);
         expect(usersService.setModeratorRole).not.toHaveBeenCalled();
       });
@@ -328,7 +373,11 @@ describe('UsersController', () => {
         usersService.setModeratorRole.mockResolvedValue(null);
 
         await expect(
-          controller.setModeratorRole(targetId, { enabled: false }, adminRequest),
+          controller.setModeratorRole(
+            targetId,
+            { enabled: false },
+            adminRequest,
+          ),
         ).rejects.toThrow(NotFoundException);
       });
     });

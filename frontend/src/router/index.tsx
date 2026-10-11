@@ -5,16 +5,19 @@ import { useGetMeQuery, useRefreshQuery } from '@/app-store/api/auth-api';
 import { getProfile } from '@/app-store/reducers/user-slice';
 import App from '@/components/App/App';
 import { useAppSelector } from '@/hooks';
-import AdminPage from '@/pages/admin-page';
 
+const AdminPage = lazy(() => import('@/pages/admin-page'));
 const HomePage = lazy(() => import('@/pages/home-page'));
 const LoginPage = lazy(() => import('@/pages/login-page'));
 const NotFoundPage = lazy(() => import('@/pages/not-found-page'));
+const ProductDetailsPage = lazy(() => import('@/pages/product-details-page'));
+const ProductReviewsPage = lazy(() => import('@/pages/product-reviews'));
 const ProductsPage = lazy(() => import('@/pages/products-page'));
 const ProfilePage = lazy(() => import('@/pages/profile-page'));
 const RegisterPage = lazy(() => import('@/pages/register-page'));
 const UsersPage = lazy(() => import('@/pages/users-page'));
 const UserCartPage = lazy(() => import('@/pages/user-cart-page'));
+const UserReviewsPage = lazy(() => import('@/pages/user-reviews'));
 
 type GuestOnlyRouteProps = {
   children: JSX.Element;
@@ -71,6 +74,9 @@ export const AppRouter = (): JSX.Element => {
       <Route path="/" element={<App />}>
         <Route index element={<HomePage />} />
         <Route path="products" element={<ProductsPage />} />
+        <Route path="products/:productId/modal" element={<ProductsPage />} />
+        <Route path="products/:productId/page" element={<ProductDetailsPage />} />
+        <Route path="products/:productId/reviews" element={<ProductReviewsPage />} />
         <Route
           path="login"
           element={
@@ -98,6 +104,7 @@ export const AppRouter = (): JSX.Element => {
           }
         />
         <Route path="users/:userId/cart" element={<UserCartPage />} />
+        <Route path="users/:userId/reviews" element={<UserReviewsPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

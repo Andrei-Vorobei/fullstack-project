@@ -50,6 +50,16 @@ const pageTitles: Record<string, string> = {
   '/admin': 'Админка',
 };
 
+const getPageTitle = (pathname: string): string => {
+  if (/^\/products\/[^/]+\/modal$/.test(pathname)) return 'Products';
+  if (/^\/products\/[^/]+\/page$/.test(pathname)) return 'Product details';
+  if (/^\/products\/[^/]+\/reviews$/.test(pathname)) return 'Product reviews';
+  if (/^\/users\/[^/]+\/cart$/.test(pathname)) return 'User cart';
+  if (/^\/users\/[^/]+\/reviews$/.test(pathname)) return 'User reviews';
+
+  return pageTitles[pathname] ?? 'Not found';
+};
+
 const App: React.FC = (): JSX.Element => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -80,9 +90,7 @@ const App: React.FC = (): JSX.Element => {
   const [setCartItemQuantity] = useSetCartItemQuantityMutation();
   const cartCount = useAppSelector(getCount);
   const isAdmin = profile?.roles.includes('admin') ?? false;
-  const pageTitle = /^\/users\/[^/]+\/cart$/.test(location.pathname)
-    ? 'User cart'
-    : (pageTitles[location.pathname] ?? 'Not found');
+  const pageTitle = getPageTitle(location.pathname);
 
   useEffect(() => {
     if (

@@ -19,7 +19,7 @@ import {
   type PaginationProps,
 } from 'antd';
 import { useMemo, useState } from 'react';
-import { useOutletContext, useSearchParams } from 'react-router';
+import { useLocation, useNavigate, useOutletContext, useParams, useSearchParams } from 'react-router';
 
 import type { CurrencyCode } from '@/utils/currency';
 
@@ -29,6 +29,7 @@ import {
   useGetCurrenciesQuery,
   useGetFilteredProductsQuery,
   useGetProductsQuery,
+  useGetProductByIdQuery,
   type CreateProductRequest,
   type Product,
 } from '@/app-store/api/products-api';
@@ -103,6 +104,9 @@ const isCreateProductRequest = (value: unknown): value is CreateProductRequest =
 
 const ProductsPage = (): JSX.Element => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { productId } = useParams();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createMode, setCreateMode] = useState<'form' | 'json'>('form');
   const [productJson, setProductJson] = useState('');
@@ -112,6 +116,7 @@ const ProductsPage = (): JSX.Element => {
   const isAdmin = profile?.roles.includes('admin') ?? false;
   const [createProduct, { isLoading: isCreating }] = useCreateProductMutation();
   const { data: categories = [], error: categoriesError } = useGetCategoriesQuery();
+  const categoryNames = useMemo(() => new Map(categories.map(({ slug, name }) => [slug, name])), [categories]);
   const { data: currencies = [], error: currenciesError } = useGetCurrenciesQuery();
 
   const category = searchParams.get('category') ?? '';
@@ -163,7 +168,16 @@ const ProductsPage = (): JSX.Element => {
 
   const products = hasActiveFilters ? (filteredData?.products ?? []) : (data?.products ?? []);
   const isLoadingList = hasActiveFilters ? filteredLoading : isLoading;
-
+  const isProductModalRoute = Boolean(productId && location.pathname.endsWith('/modal'));
+  const listedModalProduct = products.find((product) => product.id === productId);
+  const {
+    data: requestedModalProduct,
+    error: requestedModalProductError,
+    isLoading: isRequestedModalProductLoading,
+  } = useGetProductByIdQuery(productId ?? '', {
+    skip: !isProductModalRoute || Boolean(listedModalProduct),
+  });
+  const modalProduct = listedModalProduct ?? requestedModalProduct;
   const updateFilter = (key: string, value: string | boolean): void => {
     const next = new URLSearchParams(searchParams);
     if (value === '' || value === false) {
@@ -254,7 +268,7 @@ const ProductsPage = (): JSX.Element => {
           className={styles.categoryAutocomplete}
           placeholder="Категория"
           value={category}
-          options={categories.map((value) => ({ value, label: value }))}
+          options={categories.map(({ slug, name }) => ({ value: slug, label: name }))}
           onChange={(value: string) => updateFilter('category', value)}
         />
         <TextInput
@@ -390,7 +404,7 @@ const ProductsPage = (): JSX.Element => {
                 style={{ flex: '1 1 220px' }}
               >
                 <AutoComplete
-                  options={categories.map((value) => ({ value, label: value }))}
+                  options={categories.map(({ slug, name }) => ({ value: slug, label: name }))}
                   placeholder="Например, electronics"
                 />
               </Form.Item>
@@ -478,9 +492,44 @@ const ProductsPage = (): JSX.Element => {
       {!isLoadingList && products.length === 0 && <p>Товары не найдены</p>}
       <ul className={styles.cardsContainer}>
         {products.map((product) => (
-          <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
+          <ProductCard
+            key={product.id}
+            product={product}
+            categoryName={categoryNames.get(product.category) ?? product.category}
+            onAddToCart={onAddToCart}
+          />
         ))}
       </ul>
+      {isProductModalRoute && modalProduct && !listedModalProduct ? (
+        <ProductCard
+          product={modalProduct}
+          categoryName={categoryNames.get(modalProduct.category) ?? modalProduct.category}
+          onAddToCart={onAddToCart}
+          hideCard
+        />
+      ) : null}
+      {isProductModalRoute && !modalProduct ? (
+        <Modal
+          title={isRequestedModalProductLoading ? 'Загрузка товара…' : 'Товар не найден'}
+          open
+          footer={
+            <Button
+              onClick={() => void navigate({ pathname: '/products', search: location.search }, { replace: true })}
+            >
+              Закрыть
+            </Button>
+          }
+          onCancel={() => void navigate({ pathname: '/products', search: location.search }, { replace: true })}
+        >
+          {isRequestedModalProductLoading ? (
+            <Flex justify="center">
+              <Spin />
+            </Flex>
+          ) : requestedModalProductError ? (
+            <Alert type="error" showIcon message="Товар не найден" />
+          ) : null}
+        </Modal>
+      ) : null}
       <Pagination
         disabled={isLoadingList}
         pageSize={pageSize}

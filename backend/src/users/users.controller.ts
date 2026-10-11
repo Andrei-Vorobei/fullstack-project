@@ -1,4 +1,4 @@
-﻿import {
+import {
   Body,
   ConflictException,
   Controller,
@@ -17,6 +17,7 @@
 } from '@nestjs/common';
 import { Request } from 'express';
 import { UsersService } from './users.service.js';
+import { ProductsService } from '../products/products.service.js';
 import { JwtGuard } from '#src/auth/jwt.guard.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { UserRole } from './entities/user-role.enum.js';
@@ -32,7 +33,10 @@ type AuthenticatedRequest = Request & {
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly productsService: ProductsService,
+  ) {}
 
   @UseGuards(JwtGuard)
   @Get()
@@ -45,7 +49,16 @@ export class UsersController {
     }
 
     return users.map(
-      ({ id, username, roles, about, avatar, telegramUsername, createdAt, updatedAt }) => ({
+      ({
+        id,
+        username,
+        roles,
+        about,
+        avatar,
+        telegramUsername,
+        createdAt,
+        updatedAt,
+      }) => ({
         id,
         username,
         roles,
@@ -71,6 +84,21 @@ export class UsersController {
     const { password, yandexId, ...profile } = user;
 
     return profile;
+  }
+
+  @UseGuards(JwtGuard)
+  @Get(':id/reviews')
+  async getUserReviews(@Param('id', new ParseUUIDPipe()) id: string) {
+    const user = await this.usersService.findUserById(id);
+
+    if (!user) {
+      throw new NotFoundException('???????????? ?? ??????');
+    }
+
+    return {
+      user: { id: user.id, username: user.username, avatar: user.avatar, roles: user.roles },
+      reviews: await this.productsService.getReviewsByUserId(user.id),
+    };
   }
 
   @UseGuards(JwtGuard)
@@ -103,9 +131,7 @@ export class UsersController {
       });
 
       if (existingUser && existingUser.id !== user.id) {
-        throw new ConflictException(
-          'Это имя пользователя уже используется',
-        );
+        throw new ConflictException('Это имя пользователя уже используется');
       }
     }
 
@@ -164,9 +190,7 @@ export class UsersController {
     const isAdmin = req.user.roles.includes(UserRole.ADMIN);
 
     if (id !== req.user.id && !isAdmin) {
-      throw new ForbiddenException(
-        'Можно удалить только свой аккаунт',
-      );
+      throw new ForbiddenException('Можно удалить только свой аккаунт');
     }
 
     const targetUser = await this.usersService.findUserById(id);
