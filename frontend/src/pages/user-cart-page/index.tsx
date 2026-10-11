@@ -95,6 +95,9 @@ const UserCartPage = (): JSX.Element => {
 
   return (
     <section className={styles.page}>
+      <title>
+        {username ? `Корзина пользователя ${username} | wish shop` : 'Корзина пользователя | wish shop'}
+      </title>
       <Link to="/users" className={styles.backButton}>
         <ArrowLeftOutlined />К списку пользователей
       </Link>
