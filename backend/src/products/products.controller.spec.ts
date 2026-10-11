@@ -247,6 +247,18 @@ describe('ProductsController', () => {
     );
   });
 
+  it('updates a product for a moderator', async () => {
+    const updates = { title: 'Updated by moderator' };
+    await controller.updateProduct('product-id', updates, {
+      user: { roles: [UserRole.MODERATOR] },
+    });
+
+    expect(productsService.updateProduct).toHaveBeenCalledWith(
+      'product-id',
+      updates,
+    );
+  });
+
   it('rejects product updates for non-admin users', async () => {
     expect(() =>
       controller.updateProduct(

@@ -26,17 +26,46 @@ type GuestOnlyRouteProps = {
 const GuestOnlyRoute = ({ children }: GuestOnlyRouteProps): JSX.Element => {
   const accessToken = useAppSelector((state) => state.user.accessToken);
   const profile = useAppSelector(getProfile);
-  const { isLoading, isError } = useGetMeQuery(undefined, { skip: !accessToken });
+  const { isLoading: isRefreshing } = useRefreshQuery();
+  const { isLoading: isLoadingProfile, isError } = useGetMeQuery(undefined, { skip: !accessToken });
 
-  if (!accessToken || isError || profile?.roles.includes('admin')) {
+  if (profile?.roles.includes('admin')) {
     return children;
   }
 
-  if (isLoading || !profile) {
-    return <div role="status">Загрузка профиля...</div>;
+  if (profile) {
+    return <Navigate to="/" replace />;
   }
 
-  return <Navigate to="/" replace />;
+  if (!accessToken) {
+    if (isRefreshing) {
+      return (
+        <div role="status">
+          {'\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430 \u043f\u0440\u043e\u0444\u0438\u043b\u044f...'}
+        </div>
+      );
+    }
+
+    return children;
+  }
+
+  if (isLoadingProfile) {
+    return (
+      <div role="status">
+        {'\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430 \u043f\u0440\u043e\u0444\u0438\u043b\u044f...'}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return children;
+  }
+
+  return (
+    <div role="status">
+      {'\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430 \u043f\u0440\u043e\u0444\u0438\u043b\u044f...'}
+    </div>
+  );
 };
 
 type AdminOnlyRouteProps = {

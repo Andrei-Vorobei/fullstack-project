@@ -158,8 +158,11 @@ export class ProductsController {
     @Body() updates: UpdateProductDto,
     @Req() req: AuthenticatedRequest,
   ) {
-    if (!req.user.roles.includes(UserRole.ADMIN)) {
-      throw new ForbiddenException('Требуется роль администратора');
+    if (
+      !req.user.roles.includes(UserRole.ADMIN) &&
+      !req.user.roles.includes(UserRole.MODERATOR)
+    ) {
+      throw new ForbiddenException('Admin or moderator role required.');
     }
 
     return this.productsService.updateProduct(id, updates);

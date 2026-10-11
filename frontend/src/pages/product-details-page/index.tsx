@@ -129,11 +129,14 @@ const ProductDetailsPage = (): JSX.Element => {
   const { onAddToCart } = useOutletContext<ProductDetailsPageContext>();
   const profile = useAppSelector(getProfile);
   const isAdmin = profile?.roles.includes('admin') ?? false;
+  const canEditProduct = isAdmin || (profile?.roles.includes('moderator') ?? false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editValues, setEditValues] = useState<ProductEditValues | null>(null);
   const [updateProduct, { isLoading: isSaving }] = useUpdateProductMutation();
   const [deleteProduct, { isLoading: isDeleting }] = useDeleteProductMutation();
-  const { data: currencies = [], error: currenciesError } = useGetCurrenciesQuery(undefined, { skip: !isAdmin });
+  const { data: currencies = [], error: currenciesError } = useGetCurrenciesQuery(undefined, {
+    skip: !canEditProduct,
+  });
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const { data: product, error, isLoading } = useGetProductByIdQuery(productId ?? '', { skip: !productId });
   const { data: categories = [] } = useGetCategoriesQuery();
@@ -347,23 +350,25 @@ const ProductDetailsPage = (): JSX.Element => {
             </strong>
           </div>
 
-          {isAdmin ? (
+          {canEditProduct ? (
             <div className={styles.adminActions}>
               <Button icon={<EditOutlined />} onClick={openEditModal}>
                 {labels.edit}
               </Button>
-              <Popconfirm
-                title={labels.deleteConfirm}
-                description={labels.irreversible}
-                okText={labels.delete}
-                cancelText={labels.cancel}
-                okButtonProps={{ danger: true, loading: isDeleting }}
-                onConfirm={() => void removeProduct()}
-              >
-                <Button danger icon={<DeleteOutlined />} loading={isDeleting}>
-                  {labels.delete}
-                </Button>
-              </Popconfirm>
+              {isAdmin ? (
+                <Popconfirm
+                  title={labels.deleteConfirm}
+                  description={labels.irreversible}
+                  okText={labels.delete}
+                  cancelText={labels.cancel}
+                  okButtonProps={{ danger: true, loading: isDeleting }}
+                  onConfirm={() => void removeProduct()}
+                >
+                  <Button danger icon={<DeleteOutlined />} loading={isDeleting}>
+                    {labels.delete}
+                  </Button>
+                </Popconfirm>
+              ) : null}
             </div>
           ) : null}
         </div>
@@ -477,7 +482,7 @@ const ProductDetailsPage = (): JSX.Element => {
         )}
       </section>
 
-      {isAdmin && editValues ? (
+      {canEditProduct && editValues ? (
         <Modal
           title={labels.edit}
           open={isEditOpen}
