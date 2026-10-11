@@ -47,6 +47,7 @@ const pageTitles: Record<string, string> = {
   '/register': 'Register',
   '/profile': 'Profile',
   '/users': 'Users',
+  '/admin': 'Админка',
 };
 
 const App: React.FC = (): JSX.Element => {
@@ -129,6 +130,15 @@ const App: React.FC = (): JSX.Element => {
         icon: <StarFilled />,
         label: 'users',
       },
+      ...(isAdmin
+        ? [
+            {
+              key: '/admin',
+              icon: <StarFilled />,
+              label: 'Админка',
+            },
+          ]
+        : []),
     ];
   }, [accessToken, isAdmin]);
 

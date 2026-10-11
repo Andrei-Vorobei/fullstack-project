@@ -1,10 +1,11 @@
 import { lazy, type JSX } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 
-import { useGetMeQuery } from '@/app-store/api/auth-api';
+import { useGetMeQuery, useRefreshQuery } from '@/app-store/api/auth-api';
 import { getProfile } from '@/app-store/reducers/user-slice';
 import App from '@/components/App/App';
 import { useAppSelector } from '@/hooks';
+import AdminPage from '@/pages/admin-page';
 
 const HomePage = lazy(() => import('@/pages/home-page'));
 const LoginPage = lazy(() => import('@/pages/login-page'));
@@ -35,6 +36,35 @@ const GuestOnlyRoute = ({ children }: GuestOnlyRouteProps): JSX.Element => {
   return <Navigate to="/" replace />;
 };
 
+type AdminOnlyRouteProps = {
+  children: JSX.Element;
+};
+
+const AdminOnlyRoute = ({ children }: AdminOnlyRouteProps): JSX.Element => {
+  const accessToken = useAppSelector((state) => state.user.accessToken);
+  const profile = useAppSelector(getProfile);
+  const { isLoading: isRefreshing } = useRefreshQuery();
+  const { isLoading: isLoadingProfile, isError } = useGetMeQuery(undefined, { skip: !accessToken });
+
+  if (!accessToken && isRefreshing) {
+    return <div role="status">Загрузка профиля...</div>;
+  }
+
+  if (!accessToken || isError) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (isLoadingProfile || !profile) {
+    return <div role="status">Загрузка профиля...</div>;
+  }
+
+  if (!profile.roles.includes('admin')) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+
 export const AppRouter = (): JSX.Element => {
   return (
     <Routes>
@@ -59,6 +89,14 @@ export const AppRouter = (): JSX.Element => {
         />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="users" element={<UsersPage />} />
+        <Route
+          path="admin"
+          element={
+            <AdminOnlyRoute>
+              <AdminPage />
+            </AdminOnlyRoute>
+          }
+        />
         <Route path="users/:userId/cart" element={<UserCartPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

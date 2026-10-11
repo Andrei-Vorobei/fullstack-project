@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 
 import { useForm } from 'react-hook-form';
+import { Link } from 'react-router';
 
 import { useLoginMutation } from '@/app-store/api/auth-api';
 import YandexAuthLink from '@/components/forms/yandex-auth-link';
@@ -28,6 +29,8 @@ const copy = {
   success: 'Вы успешно вошли.',
   submit: 'Войти',
   submitting: 'Входим...',
+  switchPrompt: 'Нет аккаунта?',
+  switchLink: 'Зарегистрироваться',
 };
 
 const LoginForm = (): JSX.Element => {
@@ -54,8 +57,8 @@ const LoginForm = (): JSX.Element => {
       : null;
 
   return (
-    <section className={styles.container} aria-labelledby="registration-title">
-      <h1 className={styles.title} id="registration-title">
+    <section className={styles.container} aria-labelledby="login-title">
+      <h1 className={styles.title} id="login-title">
         {copy.title}
       </h1>
       <p className={styles.description}>{copy.description}</p>
@@ -126,6 +129,9 @@ const LoginForm = (): JSX.Element => {
         </Button>
       </form>
       <YandexAuthLink />
+      <p className={styles.authSwitch}>
+        {copy.switchPrompt} <Link to="/register">{copy.switchLink}</Link>
+      </p>
     </section>
   );
 };

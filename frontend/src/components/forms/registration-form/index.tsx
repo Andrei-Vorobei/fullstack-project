@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 
 import { useForm } from 'react-hook-form';
+import { Link } from 'react-router';
 
 import { useRegisterMutation } from '@/app-store/api/auth-api';
 import YandexAuthLink from '@/components/forms/yandex-auth-link';
@@ -17,11 +18,11 @@ type RegistrationFormValues = {
 
 const copy = {
   title: 'Регистрация',
-  description: 'Создайте аккаунт, заполнив форму ниже',
+  description: 'Создайте аккаунт, заполнив форму ниже.',
   name: 'Имя',
   namePlaceholder: 'Введите имя',
-  nameRequired: 'Введите имя',
-  nameMinLength: 'Имя должно содержать не менее 2 символов',
+  nameRequired: 'Введите имя.',
+  nameMinLength: 'Имя должно содержать не менее 2 символов.',
   email: 'Электронная почта',
   emailRequired: 'Введите электронную почту',
   emailInvalid: 'Введите корректный адрес электронной почты',
@@ -30,9 +31,11 @@ const copy = {
   passwordRequired: 'Введите пароль',
   passwordMinLength: 'Пароль должен содержать не менее 8 символов',
   submit: 'Зарегистрироваться',
-  submitting: 'Registering...',
-  requestFailed: 'Registration failed. Please try again',
-  success: 'Registration completed successfully',
+  submitting: 'Регистрируем...',
+  requestFailed: 'Не удалось зарегистрироваться. Попробуйте ещё раз',
+  success: 'Регистрация прошла успешно',
+  switchPrompt: 'Уже есть аккаунт?',
+  switchLink: 'Войти',
 };
 
 const RegistrationForm = (): JSX.Element => {
@@ -151,6 +154,9 @@ const RegistrationForm = (): JSX.Element => {
         </Button>
       </form>
       <YandexAuthLink />
+      <p className={styles.authSwitch}>
+        {copy.switchPrompt} <Link to="/login">{copy.switchLink}</Link>
+      </p>
     </section>
   );
 };
