@@ -207,8 +207,8 @@ const App: React.FC = (): JSX.Element => {
   };
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider breakpoint="lg" collapsedWidth="0">
+    <Layout className={styles.appLayout}>
+      <Sider className={styles.sider} breakpoint="lg" collapsedWidth="0">
         <Menu
           theme="dark"
           mode="inline"
@@ -219,7 +219,7 @@ const App: React.FC = (): JSX.Element => {
           selectedKeys={[location.pathname]}
         />
       </Sider>
-      <Layout>
+      <Layout className={styles.contentLayout}>
         {messageContextHolder}
         <Header className={styles.header} style={{ background: colorBgContainer }}>
           <div className={styles.headerContent}>

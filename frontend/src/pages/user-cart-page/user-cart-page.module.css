@@ -38,6 +38,23 @@
   background: #fff;
 }
 
+.productImageLink,
+.productTitleLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.productImageLink:focus-visible,
+.productTitleLink:focus-visible {
+  border-radius: 4px;
+  outline: 2px solid #1677ff;
+  outline-offset: 2px;
+}
+
+.productTitleLink:hover {
+  color: #1677ff;
+}
+
 .thumbnail {
   width: 64px;
   height: 64px;
@@ -52,7 +69,32 @@
   min-width: 0;
 }
 
+.priceAndControls {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: 12px;
+}
+
+.quantityControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quantity {
+  min-width: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
 .price {
+  display: inline-block;
+  width: 140px;
+  flex-shrink: 0;
+  font-size: 18px;
+  text-align: right;
   white-space: nowrap;
 }
 
@@ -85,7 +127,9 @@
     height: 48px;
   }
 
-  .price {
+  .priceAndControls {
     grid-column: 2;
+    justify-self: start;
+    flex-wrap: wrap;
   }
 }

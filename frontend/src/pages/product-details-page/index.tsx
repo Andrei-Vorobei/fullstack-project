@@ -2,6 +2,8 @@ import {
   ArrowLeftOutlined,
   DeleteOutlined,
   EditOutlined,
+  MinusOutlined,
+  PlusOutlined,
   ShoppingCartOutlined,
   StarFilled,
 } from '@ant-design/icons';
@@ -21,27 +23,33 @@ import {
   Typography,
 } from 'antd';
 import { useState, type JSX } from 'react';
-import { Link, useLocation, useNavigate, useOutletContext, useParams } from 'react-router';
+import { Link, useLocation, useNavigate, useParams } from 'react-router';
 
 import type { CurrencyCode } from '@/utils/currency';
 
+import {
+  useAddCartItemMutation,
+  useRemoveCartItemMutation,
+  useSetCartItemQuantityMutation,
+} from '@/app-store/api/cart-api';
 import {
   useDeleteProductMutation,
   useGetCategoriesQuery,
   useGetCurrenciesQuery,
   useGetProductByIdQuery,
   useUpdateProductMutation,
-  type Product,
 } from '@/app-store/api/products-api';
+import {
+  addGuestCartItem,
+  getCart,
+  removeGuestCartItem,
+  setGuestCartItemQuantity,
+} from '@/app-store/reducers/cart-slice';
 import { getProfile } from '@/app-store/reducers/user-slice';
-import { useAppSelector } from '@/hooks';
+import { useAppDispatch, useAppSelector } from '@/hooks';
 import { formatCurrency, getCurrencyLabel } from '@/utils/currency';
 
 import styles from './product-details-page.module.css';
-
-type ProductDetailsPageContext = {
-  onAddToCart: (product: Product) => void;
-};
 
 type ProductEditValues = {
   title: string;
@@ -62,6 +70,13 @@ type ProductEditValues = {
 };
 
 const labels = {
+  inCart: '\u0412 \u043a\u043e\u0440\u0437\u0438\u043d\u0435',
+  increaseQuantity:
+    '\u0423\u0432\u0435\u043b\u0438\u0442\u044c \u043a\u043e\u043b\u0438\u0447\u0435\u0441\u0442\u0432\u043e',
+  decreaseQuantity:
+    '\u0423\u043c\u0435\u043d\u044c\u0448\u0438\u0442\u044c \u043a\u043e\u043b\u0438\u0447\u0435\u0441\u0442\u0432\u043e',
+  cartUpdateError:
+    '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043e\u0431\u043d\u043e\u0432\u0438\u0442\u044c \u043a\u043e\u0440\u0437\u0438\u043d\u0443',
   back: 'Назад в каталог',
   gallery: 'Фотогалерея',
   image: 'Изображение',
@@ -126,12 +141,17 @@ const ProductDetailsPage = (): JSX.Element => {
   const { productId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { onAddToCart } = useOutletContext<ProductDetailsPageContext>();
   const profile = useAppSelector(getProfile);
+  const accessToken = useAppSelector((state) => state.user.accessToken);
+  const dispatch = useAppDispatch();
+  const cart = useAppSelector(getCart);
   const isAdmin = profile?.roles.includes('admin') ?? false;
   const canEditProduct = isAdmin || (profile?.roles.includes('moderator') ?? false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editValues, setEditValues] = useState<ProductEditValues | null>(null);
+  const [addCartItem, { isLoading: isAddingCartItem }] = useAddCartItemMutation();
+  const [setCartItemQuantity, { isLoading: isSettingCartQuantity }] = useSetCartItemQuantityMutation();
+  const [removeCartItem, { isLoading: isRemovingCartItem }] = useRemoveCartItemMutation();
   const [updateProduct, { isLoading: isSaving }] = useUpdateProductMutation();
   const [deleteProduct, { isLoading: isDeleting }] = useDeleteProductMutation();
   const { data: currencies = [], error: currenciesError } = useGetCurrenciesQuery(undefined, {
@@ -164,11 +184,52 @@ const ProductDetailsPage = (): JSX.Element => {
     );
   }
 
+  const cartItem = cart.items.find((item) => item.product.id === product.id);
+  const cartQuantity = cartItem?.quantity ?? 0;
   const categoryName = categories.find(({ slug }) => slug === product.category)?.name ?? product.category;
   const galleryImages = Array.from(new Set(product.images.filter(Boolean)));
   const currentImageIndex = Math.min(activeImageIndex, Math.max(galleryImages.length - 1, 0));
   const discountedPrice = product.price * (1 - product.discountPercentage / 100);
   const isInStock = product.stock > 0;
+  const isCartUpdating = isAddingCartItem ? true : isSettingCartQuantity ? true : isRemovingCartItem;
+
+  const addOneToCart = async (): Promise<void> => {
+    if (!isInStock || isCartUpdating) return;
+
+    if (!accessToken) {
+      dispatch(addGuestCartItem(product));
+      return;
+    }
+
+    try {
+      await addCartItem({ productId: product.id, quantity: 1 }).unwrap();
+    } catch {
+      message.error(labels.cartUpdateError);
+    }
+  };
+
+  const removeOneFromCart = async (): Promise<void> => {
+    if (!cartItem || isCartUpdating) return;
+
+    if (!accessToken) {
+      if (cartItem.quantity === 1) {
+        dispatch(removeGuestCartItem(cartItem.id));
+      } else {
+        dispatch(setGuestCartItemQuantity({ itemId: cartItem.id, quantity: cartItem.quantity - 1 }));
+      }
+      return;
+    }
+
+    try {
+      if (cartItem.quantity === 1) {
+        await removeCartItem(cartItem.id).unwrap();
+      } else {
+        await setCartItemQuantity({ itemId: cartItem.id, quantity: cartItem.quantity - 1 }).unwrap();
+      }
+    } catch {
+      message.error(labels.cartUpdateError);
+    }
+  };
   const currentImage = galleryImages[currentImageIndex];
 
   const openEditModal = (): void => {
@@ -328,20 +389,44 @@ const ProductDetailsPage = (): JSX.Element => {
               </div>
             ) : null}
           </div>
-          <Button
-            className={styles.addToCart}
-            type="primary"
-            size="large"
-            icon={<ShoppingCartOutlined />}
-            disabled={!isInStock}
-            onClick={() => onAddToCart(product)}
-          >
-            {labels.addToCart}
-          </Button>
+          <div className={styles.cartActions}>
+            {cartQuantity > 0 ? (
+              <div className={styles.quantityControl} role="group" aria-label={labels.inCart}>
+                <Button
+                  aria-label={labels.decreaseQuantity}
+                  disabled={isCartUpdating}
+                  icon={<MinusOutlined />}
+                  onClick={() => void removeOneFromCart()}
+                  shape="circle"
+                />
+                <span className={styles.quantityValue} aria-live="polite">
+                  {cartQuantity}
+                </span>
+                <Button
+                  aria-label={labels.increaseQuantity}
+                  disabled={isCartUpdating ? true : cartQuantity >= product.stock}
+                  icon={<PlusOutlined />}
+                  onClick={() => void addOneToCart()}
+                  shape="circle"
+                />
+              </div>
+            ) : null}
+            <Button
+              className={styles.addToCart}
+              type="primary"
+              size="large"
+              icon={<ShoppingCartOutlined />}
+              disabled={!isInStock || isCartUpdating || cartQuantity >= product.stock}
+              loading={isAddingCartItem}
+              onClick={() => void addOneToCart()}
+            >
+              {labels.addToCart}
+            </Button>
+          </div>
 
           <div className={styles.purchaseDetails}>
             <span>{labels.brand}</span>
-            <strong>{product.brand || '?'}</strong>
+            <strong>{product.brand || '\u041d\u0435\u0442 \u0434\u0430\u043d\u043d\u044b\u0445'}</strong>
             <span>{labels.sku}</span>
             <strong>{product.sku}</strong>
             <span>{labels.stock}</span>
@@ -397,7 +482,7 @@ const ProductDetailsPage = (): JSX.Element => {
             </div>
             <div>
               <dt>{labels.brand}</dt>
-              <dd>{product.brand || '?'}</dd>
+              <dd>{product.brand || '\u041d\u0435\u0442 \u0434\u0430\u043d\u043d\u044b\u0445'}</dd>
             </div>
             <div>
               <dt>{labels.sku}</dt>

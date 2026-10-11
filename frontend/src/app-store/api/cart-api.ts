@@ -52,6 +52,7 @@ export const cartApi = createApi({
     }),
     getUserCart: builder.query<CartResponse, string>({
       query: (userId) => ({ url: `/cart/users/${userId}` }),
+      providesTags: ['Cart'],
     }),
     addCartItem: builder.mutation<void, AddCartItemRequest>({
       query: (item) => ({

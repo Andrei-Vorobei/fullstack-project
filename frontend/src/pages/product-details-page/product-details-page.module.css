@@ -248,8 +248,30 @@
   }
 }
 
-.addToCart {
+.cartActions {
+  display: flex;
   width: 100%;
+  align-items: center;
+  gap: 12px;
+}
+
+.quantityControl {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.quantityValue {
+  min-width: 24px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.addToCart {
+  flex: 1;
+  min-width: 0;
   min-height: 48px;
   font-weight: 600;
 }
