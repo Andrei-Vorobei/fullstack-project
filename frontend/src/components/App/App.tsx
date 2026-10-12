@@ -283,7 +283,7 @@ const App: React.FC = (): JSX.Element => {
             )}
           </div>
         </Header>
-        <Content style={{ margin: '24px 16px 0' }}>
+        <Content className={styles.content}>
           <Suspense fallback={<div role="status">Загрузка страницы...</div>}>
             <Outlet context={{ onAddToCart: handleAddToCart }} />
           </Suspense>
@@ -309,7 +309,7 @@ const App: React.FC = (): JSX.Element => {
             />
           </Modal>
         </Content>
-        <Footer style={{ textAlign: 'center' }}>©{currentYear} Created</Footer>
+        <Footer className={styles.footer}>©{currentYear} Created</Footer>
       </Layout>
     </Layout>
   );

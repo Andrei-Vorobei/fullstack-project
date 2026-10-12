@@ -9,10 +9,23 @@
 }
 
 .contentLayout {
+  display: flex;
+  flex-direction: column;
   height: 100vh;
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
+}
+
+.content {
+  flex: 1 0 auto;
+  margin: 24px 16px 0;
+}
+
+.footer {
+  flex-shrink: 0;
+  margin-top: auto;
+  text-align: center;
 }
 
 .header {
