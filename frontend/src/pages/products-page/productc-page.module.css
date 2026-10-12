@@ -62,3 +62,22 @@
   margin-top: auto;
   padding-top: 16px;
 }
+
+@media (width <= 600px) {
+  .pagination:global(.ant-pagination-align-center) {
+    justify-content: flex-start;
+  }
+
+  .pagination {
+    box-sizing: border-box;
+    flex-wrap: wrap;
+    width: 100%;
+    padding-right: 94px;
+    row-gap: 8px;
+  }
+
+  .pagination :global(.ant-pagination-total-text) {
+    flex: 0 0 100%;
+    margin-inline-end: 0;
+  }
+}

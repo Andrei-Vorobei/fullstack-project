@@ -49,6 +49,8 @@ const parseQueryInteger = (value: string | null, minimum: number): number | null
 };
 type ProductsPageContext = {
   onAddToCart: (product: Product) => void;
+  onChangeCartQuantity: (itemId: string, quantity: number) => void;
+  onRemoveFromCart: (itemId: string) => void;
 };
 
 type CreateProductFormValues = {
@@ -111,7 +113,7 @@ const ProductsPage = (): JSX.Element => {
   const [createMode, setCreateMode] = useState<'form' | 'json'>('form');
   const [productJson, setProductJson] = useState('');
   const [createForm] = Form.useForm<CreateProductFormValues>();
-  const { onAddToCart } = useOutletContext<ProductsPageContext>();
+  const { onAddToCart, onChangeCartQuantity, onRemoveFromCart } = useOutletContext<ProductsPageContext>();
   const profile = useAppSelector(getProfile);
   const isAdmin = profile?.roles.includes('admin') ?? false;
   const [createProduct, { isLoading: isCreating }] = useCreateProductMutation();
@@ -497,6 +499,8 @@ const ProductsPage = (): JSX.Element => {
             product={product}
             categoryName={categoryNames.get(product.category) ?? product.category}
             onAddToCart={onAddToCart}
+            onChangeCartQuantity={onChangeCartQuantity}
+            onRemoveFromCart={onRemoveFromCart}
           />
         ))}
       </ul>
@@ -505,6 +509,8 @@ const ProductsPage = (): JSX.Element => {
           product={modalProduct}
           categoryName={categoryNames.get(modalProduct.category) ?? modalProduct.category}
           onAddToCart={onAddToCart}
+          onChangeCartQuantity={onChangeCartQuantity}
+          onRemoveFromCart={onRemoveFromCart}
           hideCard
         />
       ) : null}
@@ -539,7 +545,7 @@ const ProductsPage = (): JSX.Element => {
         showSizeChanger
         onChange={paginationHandler}
         total={hasActiveFilters ? (filteredData?.total ?? 0) : (data?.total ?? 0)}
-        showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+        showTotal={(total, range) => `${range[0]}-${range[1]} из ${total} карточек`}
       />
     </div>
   );

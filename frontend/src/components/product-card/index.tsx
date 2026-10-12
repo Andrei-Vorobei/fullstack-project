@@ -4,6 +4,8 @@ import {
   DeleteOutlined,
   EditOutlined,
   LinkOutlined,
+  MinusOutlined,
+  PlusOutlined,
   ShoppingCartOutlined,
   StarFilled,
 } from '@ant-design/icons';
@@ -17,6 +19,7 @@ import {
   useUpdateProductMutation,
   type Product,
 } from '@/app-store/api/products-api';
+import { getCart } from '@/app-store/reducers/cart-slice';
 import { getProfile } from '@/app-store/reducers/user-slice';
 import { useAppSelector } from '@/hooks';
 import { formatCurrency, getCurrencyLabel } from '@/utils/currency';
@@ -27,10 +30,19 @@ type ProductCardProps = {
   product: Product;
   categoryName: string;
   onAddToCart: (product: Product) => void;
+  onChangeCartQuantity: (itemId: string, quantity: number) => void;
+  onRemoveFromCart: (itemId: string) => void;
   hideCard?: boolean;
 };
 
-const ProductCard = ({ product, categoryName, onAddToCart, hideCard = false }: ProductCardProps): JSX.Element => {
+const ProductCard = ({
+  product,
+  categoryName,
+  onAddToCart,
+  onChangeCartQuantity,
+  onRemoveFromCart,
+  hideCard = false,
+}: ProductCardProps): JSX.Element => {
   const location = useLocation();
   const navigate = useNavigate();
   const { productId } = useParams();
@@ -53,6 +65,8 @@ const ProductCard = ({ product, categoryName, onAddToCart, hideCard = false }: P
     void navigate({ pathname: '/products', search: location.search }, { replace: true });
   };
   const profile = useAppSelector(getProfile);
+  const cartItem = useAppSelector(getCart).items.find((item) => item.product.id === product.id);
+  const cartQuantity = cartItem?.quantity ?? 0;
   const isAdmin = profile?.roles.includes('admin') ?? false;
   const [updateProduct, { isLoading: isSaving }] = useUpdateProductMutation();
   const [deleteProduct, { isLoading: isDeleting }] = useDeleteProductMutation();
@@ -161,7 +175,7 @@ const ProductCard = ({ product, categoryName, onAddToCart, hideCard = false }: P
               ) : null}
             </div>
             <Button type="primary" onClick={() => onAddToCart(product)}>
-              В корзину
+              В корзину{cartQuantity > 0 ? ` (${cartQuantity})` : ''}
             </Button>
           </div>
         </li>
@@ -225,17 +239,43 @@ const ProductCard = ({ product, categoryName, onAddToCart, hideCard = false }: P
                   Подробнее о товаре
                 </Button>
                 <Button onClick={closeDetails}>К товарам</Button>
-                <Button
-                  className={styles.addToCartButton}
-                  type="primary"
-                  icon={<ShoppingCartOutlined />}
-                  onClick={() => {
-                    onAddToCart(product);
-                    closeDetails();
-                  }}
-                >
-                  В корзину
-                </Button>
+                <div className={styles.cartActions}>
+                  {cartItem ? (
+                    <div className={styles.cartQuantityControls} role="group" aria-label="Количество в корзине">
+                      <Button
+                        aria-label="Уменьшить количество"
+                        icon={<MinusOutlined />}
+                        onClick={() => {
+                          if (cartQuantity === 1) {
+                            onRemoveFromCart(cartItem.id);
+                          } else {
+                            onChangeCartQuantity(cartItem.id, cartQuantity - 1);
+                          }
+                        }}
+                        shape="circle"
+                      />
+                      <span className={styles.cartQuantity} aria-live="polite">
+                        {cartQuantity}
+                      </span>
+                      <Button
+                        aria-label="Увеличить количество"
+                        disabled={cartQuantity >= product.stock}
+                        icon={<PlusOutlined />}
+                        onClick={() => onAddToCart(product)}
+                        shape="circle"
+                      />
+                    </div>
+                  ) : null}
+                  <Button
+                    className={styles.addToCartButton}
+                    type="primary"
+                    icon={<ShoppingCartOutlined />}
+                    disabled={product.stock <= 0 || cartQuantity >= product.stock}
+                    onClick={() => onAddToCart(product)}
+                  >
+                    Добавить в корзину
+                  </Button>
+                </div>
               </div>
             </div>
           )

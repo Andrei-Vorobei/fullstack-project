@@ -215,7 +215,7 @@ const App: React.FC = (): JSX.Element => {
         placement="left"
         open={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
-        width={240}
+        size={240}
         styles={{ body: { padding: 0 } }}
       >
         <Menu
@@ -285,7 +285,13 @@ const App: React.FC = (): JSX.Element => {
         </Header>
         <Content className={styles.content}>
           <Suspense fallback={<div role="status">Загрузка страницы...</div>}>
-            <Outlet context={{ onAddToCart: handleAddToCart }} />
+            <Outlet
+              context={{
+                onAddToCart: handleAddToCart,
+                onChangeCartQuantity: handleChangeQuantity,
+                onRemoveFromCart: handleRemoveFromCart,
+              }}
+            />
           </Suspense>
           <FloatButton
             style={{ height: '70px', width: '70px' }}

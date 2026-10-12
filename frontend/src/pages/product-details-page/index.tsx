@@ -70,17 +70,14 @@ type ProductEditValues = {
 };
 
 const labels = {
-  inCart: '\u0412 \u043a\u043e\u0440\u0437\u0438\u043d\u0435',
-  increaseQuantity:
-    '\u0423\u0432\u0435\u043b\u0438\u0442\u044c \u043a\u043e\u043b\u0438\u0447\u0435\u0441\u0442\u0432\u043e',
-  decreaseQuantity:
-    '\u0423\u043c\u0435\u043d\u044c\u0448\u0438\u0442\u044c \u043a\u043e\u043b\u0438\u0447\u0435\u0441\u0442\u0432\u043e',
-  cartUpdateError:
-    '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043e\u0431\u043d\u043e\u0432\u0438\u0442\u044c \u043a\u043e\u0440\u0437\u0438\u043d\u0443',
+  inCart: 'В корзине',
+  increaseQuantity: 'Увеличить количество',
+  decreaseQuantity: 'Уменьшить количество',
+  cartUpdateError: 'Не удалось обновить корзину',
   back: 'Назад в каталог',
   gallery: 'Фотогалерея',
   image: 'Изображение',
-  noImage: 'Изображение нет',
+  noImage: 'Нет изображения',
   inStock: 'В наличии',
   outOfStock: 'Нет в наличии',
   pieces: 'шт.',
@@ -117,18 +114,18 @@ const labels = {
   stockLabel: 'Остаток',
   imagesLabel: 'Ссылки на изображения (каждая с новой строки)',
   titleRequired: 'Название не может быть пустым',
-  categoryLabel: '\u041a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u044f',
-  brandLabel: '\u0411\u0440\u0435\u043d\u0434',
-  skuLabel: '\u0410\u0440\u0442\u0438\u043a\u0443\u043b',
-  weightLabel: '\u0412\u0435\u0441 (\u043a\u0433)',
-  dimensionsLabel: '\u0420\u0430\u0437\u043c\u0435\u0440\u044b (\u0441\u043c)',
-  widthLabel: '\u0428\u0438\u0440\u0438\u043d\u0430',
-  heightLabel: '\u0412\u044b\u0441\u043e\u0442\u0430',
-  depthLabel: '\u0413\u043b\u0443\u0431\u0438\u043d\u0430',
-  availabilityLabel: '\u041d\u0430\u043b\u0438\u0447\u0438\u0435',
-  inStockOption: '\u0412 \u043d\u0430\u043b\u0438\u0447\u0438\u0438',
-  lowStockOption: '\u041c\u0430\u043b\u043e \u043d\u0430 \u0441\u043a\u043b\u0430\u0434\u0435',
-  outOfStockOption: '\u041d\u0435\u0442 \u0432 \u043d\u0430\u043b\u0438\u0447\u0438\u0438',
+  categoryLabel: 'Категория',
+  brandLabel: 'Бренд',
+  skuLabel: 'Артикул',
+  weightLabel: 'Вес (кг)',
+  dimensionsLabel: 'Размеры (см)',
+  widthLabel: 'Ширина',
+  heightLabel: 'Высота',
+  depthLabel: 'Глубина',
+  availabilityLabel: 'Наличие',
+  inStockOption: 'В наличии',
+  lowStockOption: 'Мало на складе',
+  outOfStockOption: 'Нет в наличии',
   imageRequired: 'Добавьте хотя бы одну ссылку на изображение',
   saveSuccess: 'Товар обновлён',
   saveError: 'Не удалось сохранить товар',
@@ -246,9 +243,9 @@ const ProductDetailsPage = (): JSX.Element => {
       availabilityStatus:
         (
           {
-            '\u0412 \u043d\u0430\u043b\u0438\u0447\u0438\u0438': 'In Stock',
-            '\u041d\u0435\u0442 \u0432 \u043d\u0430\u043b\u0438\u0447\u0438\u0438': 'Out of Stock',
-            '\u041c\u0430\u043b\u043e \u043d\u0430 \u0441\u043a\u043b\u0430\u0434\u0435': 'Low Stock',
+            'В наличии': 'In Stock',
+            'Нет в наличии': 'Out of Stock',
+            'Мало на складе': 'Low Stock',
           } as Record<string, string>
         )[product.availabilityStatus] ?? 'In Stock',
       weight: product.weight,
@@ -426,7 +423,7 @@ const ProductDetailsPage = (): JSX.Element => {
 
           <div className={styles.purchaseDetails}>
             <span>{labels.brand}</span>
-            <strong>{product.brand || '\u041d\u0435\u0442 \u0434\u0430\u043d\u043d\u044b\u0445'}</strong>
+            <strong>{product.brand || 'Нет данных'}</strong>
             <span>{labels.sku}</span>
             <strong>{product.sku}</strong>
             <span>{labels.stock}</span>
@@ -482,7 +479,7 @@ const ProductDetailsPage = (): JSX.Element => {
             </div>
             <div>
               <dt>{labels.brand}</dt>
-              <dd>{product.brand || '\u041d\u0435\u0442 \u0434\u0430\u043d\u043d\u044b\u0445'}</dd>
+              <dd>{product.brand || 'Нет данных'}</dd>
             </div>
             <div>
               <dt>{labels.sku}</dt>

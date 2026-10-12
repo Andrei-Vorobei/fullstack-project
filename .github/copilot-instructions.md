@@ -33,3 +33,4 @@ Prefer focused tests and linting for the files being changed, then run the build
 - Never commit secrets or local environment files. Consult the README and example environment files; do not print or expose secret values.
 - Treat database volumes and data as persistent: do not use destructive Docker commands such as `docker compose down -v` unless explicitly requested.
 - Update relevant documentation when setup, behavior, or operational requirements change.
+- Keep user-facing text readable and natural: write Russian text as literal UTF-8, not Unicode escape sequences or mojibake. When touching UI text, inspect and correct all affected strings rather than only decoding escaped characters.
