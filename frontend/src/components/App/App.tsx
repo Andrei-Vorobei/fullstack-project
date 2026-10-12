@@ -3,13 +3,14 @@ import type { JSX } from 'react';
 import {
   HomeFilled,
   LogoutOutlined,
+  MenuOutlined,
   ProductFilled,
   ShoppingCartOutlined,
   StarFilled,
   UserOutlined,
 } from '@ant-design/icons';
-import { Dropdown, FloatButton, Layout, Menu, Modal, message, theme } from 'antd';
-import { Suspense, useEffect, useMemo } from 'react';
+import { Drawer, Dropdown, FloatButton, Layout, Menu, Modal, message, theme } from 'antd';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 
 import type { Product } from '@/app-store/api/products-api';
@@ -66,6 +67,7 @@ const App: React.FC = (): JSX.Element => {
   const location = useLocation();
   const [logout] = useLogoutMutation();
   const [messageApi, messageContextHolder] = message.useMessage();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isOpenCartModal = useAppSelector(getIsOpenCartModal);
 
@@ -208,6 +210,25 @@ const App: React.FC = (): JSX.Element => {
 
   return (
     <Layout className={styles.appLayout}>
+      <Drawer
+        title="Navigation"
+        placement="left"
+        open={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        width={240}
+        styles={{ body: { padding: 0 } }}
+      >
+        <Menu
+          theme="dark"
+          mode="inline"
+          items={sidebarItems}
+          onClick={({ key }) => {
+            void navigate(String(key));
+            setIsMobileMenuOpen(false);
+          }}
+          selectedKeys={[location.pathname]}
+        />
+      </Drawer>
       <Sider className={styles.sider} breakpoint="lg" collapsedWidth="0">
         <Menu
           theme="dark"
@@ -223,6 +244,16 @@ const App: React.FC = (): JSX.Element => {
         {messageContextHolder}
         <Header className={styles.header} style={{ background: colorBgContainer }}>
           <div className={styles.headerContent}>
+            <Button
+              className={styles.mobileMenuButton}
+              variant="secondary"
+              type="button"
+              aria-label="Open navigation menu"
+              aria-expanded={isMobileMenuOpen}
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <MenuOutlined />
+            </Button>
             <h1 className={styles.pageTitle}>{pageTitle}</h1>
             {profile ? (
               <Dropdown

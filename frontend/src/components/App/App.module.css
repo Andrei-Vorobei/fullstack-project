@@ -4,8 +4,6 @@
 }
 
 .sider {
-  position: sticky;
-  top: 0;
   height: 100vh;
   overflow-y: auto;
 }
@@ -45,6 +43,19 @@
   min-height: 38px;
   padding: 0 14px;
   border-radius: 20px;
+}
+
+.mobileMenuButton {
+  display: none;
+}
+
+@media (max-width: 991px) {
+  .mobileMenuButton {
+    display: inline-flex;
+    min-width: 42px;
+    min-height: 42px;
+    padding: 8px;
+  }
 }
 
 @media (max-width: 576px) {
